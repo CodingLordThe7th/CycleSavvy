@@ -8,7 +8,8 @@ const staticAssets = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
   'https://cdn.jsdelivr.net/npm/localforage@1.9.0/dist/localforage.min.js',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js'
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js',
+  '/preloaded_routes/iron_horse_trail.gpx'
 ];
 // Install event: triggered when the service worker is first installed.
 self.addEventListener('install', (event) => {
