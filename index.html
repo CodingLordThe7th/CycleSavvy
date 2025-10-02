@@ -13,7 +13,6 @@
       height: 100%;
       margin: 0;
     }
-
     #map {
       height: 100vh;
       width: 100%;
@@ -26,7 +25,26 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 1000;
-      max-width: 350px;
+      max-width: 500px;
+    }
+
+    /* Fetch Route Card (centered) */
+    #fetchRouteCard {
+      display: none; /* hidden by default */
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2000;
+      width: 400px;
+    }
+
+    /* Dropdown menu auto-sizes to content */
+    .dropdown-menu {
+      min-width: max-content !important;
+      width: auto !important;
+      white-space: nowrap;
+      box-sizing: border-box;
     }
   </style>
 </head>
@@ -35,23 +53,54 @@
   <!-- Map -->
   <div id="map"></div>
 
-  <!-- Bootstrap Card for Controls -->
+  <!-- Main Controls -->
   <div class="card shadow control-card">
     <div class="card-body text-center">
-      <h5 class="card-title mb-3">🚴 Biking Tracker</h5>
-      <div class="btn-group w-100" role="group">
-        <button class="btn btn-success" id="start">▶ Start</button>
-        <button class="btn btn-danger" id="stop">■ Stop</button>
-        <button class="btn btn-info text-white" id="history">📜 History</button>
-        <button class="btn btn-warning" id="reset">🗑 Reset Cache</button>
+      <h5 class="card-title mb-3">Biking Tracker</h5>
+      <div class="d-flex justify-content-between">
+        <button class="btn btn-success flex-fill mx-1" id="start">Start</button>
+        <button class="btn btn-danger flex-fill mx-1" id="stop">Stop</button>
+
+        <!-- History dropdown -->
+        <div class="dropdown flex-fill mx-1">
+          <button class="btn btn-info text-white dropdown-toggle" id="history" data-bs-toggle="dropdown" aria-expanded="false">
+            History
+          </button>
+          <ul class="dropdown-menu" id="routeList" aria-labelledby="history"
+              style="max-height: 250px; overflow-y: auto;">
+            <!-- Routes injected dynamically -->
+          </ul>
+        </div>
+
+        <button class="btn btn-warning flex-fill mx-1" id="reset">Reset</button>
+        <button class="btn btn-primary flex-fill mx-1" id="fetchBtn">Fetch Route</button>
       </div>
     </div>
   </div>
 
+  <!-- Fetch Route Modal-like Card -->
+  <div class="card shadow" id="fetchRouteCard">
+    <div class="card-body text-center">
+      <h5 class="card-title mb-3">Fetch Preloaded Routes</h5>
+      <div class="mb-3">
+        <label class="form-label" for="routeSelect">Select a Route:</label>
+        <select id="routeSelect" class="form-select">
+          <option value="" selected disabled>Choose a route</option>
+          <option value="/preloaded_routes/iron_horse_trail.gpx">Route 1: Iron Horse Trail</option>
+          <!-- Add more preloaded GPX routes here -->
+        </select>
+      </div>
+      <button class="btn btn-primary mt-2" id="loadRoute">Load Route</button>
+      <button class="btn btn-secondary mt-2" id="cancelFetch">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/localforage@1.9.0/dist/localforage.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.5.0/gpx.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
