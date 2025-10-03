@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Safety Tips - CycleSavvy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="compassicon.png">
+    <style>
+      body, html {
+        height: 100%;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+      }
+      .Navbar {
+        height: auto;
+      }
+      /* Navbar links: square corners + consistent padding */
+        .navbar .nav-link, 
+        .Navbar .nav-link {
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 0.75rem 1rem !important;
+        }
+
+    </style>
+  </head>
+  <!-- Toast Container -->
+
+  <body>
+    <div class="content container">
+  <h1 class="mb-4">Cycling Safety Tips</h1>
+  <ul class="list-group">
+    <li class="list-group-item">
+      <strong>Wear a Helmet:</strong> Always wear a properly fitted helmet. 
+      <em>It significantly reduces the risk of serious head injuries in case of accidents.</em>
+    </li>
+    <li class="list-group-item">
+      <strong>Be Visible:</strong> Use front and rear lights and wear reflective gear. 
+      <em>Drivers often overlook cyclists, so visibility ensures you’re seen day and night.</em>
+    </li>
+    <li class="list-group-item">
+      <strong>Check Your Bike:</strong> Brakes, tires, and chain should be inspected before every ride. 
+      <em>Mechanical failures at high speed can cause accidents and leave you stranded.</em>
+    </li>
+    <li class="list-group-item">
+      <strong>Follow the Rules:</strong> Ride with traffic, obey signs, and use hand signals. 
+      <em>This builds trust with drivers and prevents collisions at intersections.</em>
+    </li>
+    <li class="list-group-item">
+      <strong>Stay Alert:</strong> Watch for cars, pedestrians, and road hazards. 
+      <em>Quick reactions to potholes, doors opening, or sudden stops can save your life.</em>
+    </li>
+    <li class="list-group-item">
+      <strong>Carry Essentials:</strong> Bring water, ID, and a repair kit. 
+      <em>Being prepared keeps you hydrated, safe, and able to fix small breakdowns.</em>
+    </li>
+    <li class="list-group-item">
+      <strong>Use Bike Lanes:</strong> Stick to designated cycling lanes whenever possible. 
+      <em>They’re designed to give you more space and protection from cars.</em>
+    </li>
+    <li class="list-group-item">
+      <strong>Control Your Speed:</strong> Slow down in crowded areas and intersections. 
+      <em>Riding too fast limits reaction time and increases stopping distance.</em>
+    </li>
+    <li class="list-group-item">
+      <strong>Make Eye Contact:</strong> Ensure drivers see you before crossing or turning. 
+      <em>Eye contact reduces misunderstandings and prevents dangerous moves by cars.</em>
+    </li>
+    <li class="list-group-item">
+      <strong>Avoid Headphones:</strong> Keep your ears free. 
+      <em>You need to hear honks, sirens, or approaching vehicles to react in time.</em>
+    </li>
+  </ul>
+</div>
+
+
+    <!-- Navbar -->
+    <div class="Navbar sticky-bottom bg-light">
+      <nav class="nav nav-pills flex-column flex-sm-row">
+        <a class="flex-sm-fill text-sm-center nav-link" href="index.html">GPS Stuff</a>
+        <a class="flex-sm-fill text-sm-center nav-link" href="bikerepair.html">Bike Repair</a>
+        <a class="flex-sm-fill text-sm-center nav-link active" aria-current="page" href="#">Safety</a>
+        <a class="flex-sm-fill text-sm-center nav-link" href="settings.html">Settings</a>
+      </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            const settings = JSON.parse(localStorage.getItem("cycleSavvySettings")) || {};
+
+            if (settings.darkMode) {
+            document.body.classList.add("bg-dark", "text-light");
+
+            // Fix navbar for dark mode
+            const navbar = document.querySelector(".Navbar");
+            if (navbar) {
+                navbar.classList.remove("bg-light");
+                navbar.classList.add("bg-dark");
+                navbar.querySelectorAll(".nav-link").forEach(link => {
+                link.classList.add("text-light");
+                });
+            }
+            }
+        })();
+    </script>
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 3000">
+    <div id="toastBox" class="toast align-items-center text-bg-primary border-0 fade" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+        <div class="toast-body" id="toastMessage">
+            <!-- Message will go here -->
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+  </body>
+</html>
