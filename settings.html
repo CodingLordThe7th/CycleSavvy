@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CycleSavvy - Settings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="shortcut icon" type="image/x-icon" href="compassicon.png">
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      padding: 1.5rem;
+    }
+
+    /* Navbar links: square corners + consistent padding */
+    .navbar .nav-link, 
+    .Navbar .nav-link {
+      border-radius: 0 !important;
+      margin: 0 !important;
+      padding: 0.75rem 1rem !important;
+    }
+
+    /* Dark mode styling */
+    body.bg-dark .card {
+      background-color: #4b4b4b;
+      border-color: #888888;
+    }
+    body.bg-dark .form-check-label,
+    body.bg-dark .card-title,
+    body.bg-dark label,
+    body.bg-dark h1 {
+      color: #f8f9fa;
+    }
+
+    
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+    <h1 class="mb-4">⚙️ Settings</h1>
+
+    <!-- Dark Mode -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Appearance</h5>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="darkModeToggle">
+          <label class="form-check-label" for="darkModeToggle">Enable Dark Mode</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Units -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Units</h5>
+        <select id="unitsSelect" class="form-select">
+          <option value="metric">Metric (km)</option>
+          <option value="imperial">Imperial (miles)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Notifications</h5>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="notificationsToggle">
+          <label class="form-check-label" for="notificationsToggle">Enable Notifications</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset All -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Reset</h5>
+        <button class="btn btn-warning w-100 mb-2" id="resetCache">Reset Ride History</button>
+        <button class="btn btn-danger w-100" id="resetSettings">Reset All Settings & Data</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Navbar -->
+  <div class="Navbar sticky-bottom">
+    <nav id="mainNavbar" class="nav nav-pills flex-column flex-sm-row bg-light">
+      <a class="flex-sm-fill text-sm-center nav-link" href="index.html">GPS Stuff</a>
+      <a class="flex-sm-fill text-sm-center nav-link" href="bikerepair.html">Bike Repair</a>
+      <a class="flex-sm-fill text-sm-center nav-link" href="safety.html">Safety</a>
+      <a class="flex-sm-fill text-sm-center nav-link active" aria-current="page" href="#">Settings</a>
+    </nav>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/localforage@1.9.0/dist/localforage.min.js"></script>
+<script>
+  // Load saved settings
+  const settings = JSON.parse(localStorage.getItem("cycleSavvySettings")) || {};
+
+  const darkModeToggle = document.getElementById("darkModeToggle");
+  const unitsSelect = document.getElementById("unitsSelect");
+  const notificationsToggle = document.getElementById("notificationsToggle");
+  const navbar = document.getElementById("mainNavbar");
+
+  // Apply stored settings
+  if (settings.darkMode) {
+    document.body.classList.add("bg-dark", "text-light");
+    navbar.classList.remove("bg-light");
+    navbar.classList.add("bg-dark", "navbar-dark");
+    darkModeToggle.checked = true;
+  }
+  if (settings.units) unitsSelect.value = settings.units;
+  if (settings.notifications) notificationsToggle.checked = true;
+
+  // Update on change
+  darkModeToggle.addEventListener("change", () => {
+    settings.darkMode = darkModeToggle.checked;
+    localStorage.setItem("cycleSavvySettings", JSON.stringify(settings));
+    location.reload();
+  });
+
+  unitsSelect.addEventListener("change", () => {
+    settings.units = unitsSelect.value;
+    localStorage.setItem("cycleSavvySettings", JSON.stringify(settings));
+    showToast("Units updated to " + settings.units, "info");
+  });
+
+  notificationsToggle.addEventListener("change", () => {
+    settings.notifications = notificationsToggle.checked;
+    localStorage.setItem("cycleSavvySettings", JSON.stringify(settings));
+    showToast("Notifications " + (settings.notifications ? "enabled" : "disabled"), "info");
+  });
+
+  // Reset Ride History
+  document.getElementById("resetCache").addEventListener("click", async () => {
+    if (confirm("Are you sure you want to clear all saved ride history?")) {
+      await localforage.clear();
+      showToast("Ride history cleared!", "warning");
+    }
+  });
+
+  // Reset All Settings
+  document.getElementById("resetSettings").addEventListener("click", () => {
+    if (confirm("Are you sure you want to reset all settings and data?")) {
+      localStorage.clear();
+      localforage.clear();
+      showToast("All settings and data reset!", "danger");
+      location.reload();
+    }
+  });
+
+  // ✅ Toast function
+  function showToast(message, type = "primary") {
+    const toastBox = document.getElementById("toastBox");
+    const toastMessage = document.getElementById("toastMessage");
+
+    if (!toastBox || !toastMessage) {
+      console.warn("Toast container not found in DOM!");
+      return;
+    }
+
+    toastMessage.textContent = message;
+    toastBox.className = `toast align-items-center text-bg-${type} border-0 fade`;
+
+    const toast = new bootstrap.Toast(toastBox, { delay: 2000 });
+    toast.show();
+  }
+</script>
+
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 3000">
+  <div id="toastBox" class="toast align-items-center text-bg-primary border-0 fade" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMessage">
+        <!-- Message will go here -->
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
