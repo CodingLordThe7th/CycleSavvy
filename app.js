@@ -248,6 +248,139 @@ function getUserSettings() {
   }
 }
 
+/* ---------- Background tracking wrapper (plugin-agnostic) ----------
+   These helpers attempt to call native background geolocation plugins when
+   present (Capacitor/Cordova/TransistorSoft naming). When running in a browser
+   they fall back to a no-op or an informative toast.
+*/
+
+function _findBgPlugin() {
+  // Capacitor plugins (if Capacitor is installed)
+  try {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.BackgroundGeolocation) {
+      return { type: 'capacitor', plugin: window.Capacitor.Plugins.BackgroundGeolocation };
+    }
+  } catch (e) {}
+
+  // Common Cordova/TransistorSoft plugin global
+  if (window.BackgroundGeolocation) return { type: 'cordova', plugin: window.BackgroundGeolocation };
+
+  // Some setups expose a global named BackgroundGeolocation or bgGeo
+  if (window.bgGeo) return { type: 'cordova', plugin: window.bgGeo };
+
+  return null;
+}
+
+// startBackgroundTracking(options) -> returns Promise
+async function startBackgroundTracking(options = {}) {
+  const found = _findBgPlugin();
+  if (!found) {
+    notify('Background tracking not available in browser. Wrap the app with Capacitor and install a background geolocation plugin.', 'warning');
+    return false;
+  }
+
+  try {
+    if (found.type === 'capacitor') {
+      // Capacitor plugin call pattern (plugin-specific)
+      await found.plugin.configure({
+        desiredAccuracy: options.desiredAccuracy || 10,
+        distanceFilter: options.distanceFilter || 10,
+        stopOnTerminate: false,
+        startOnBoot: !!options.startOnBoot,
+        notification: { title: 'CycleSavvy', text: 'Tracking your ride' }
+      });
+      await found.plugin.start();
+      notify('Background tracking started', 'success');
+      return true;
+    } else if (found.type === 'cordova') {
+      // TransistorSoft / cordova-plugin-background-geolocation API (common)
+      if (found.plugin.configure) {
+        found.plugin.configure({
+          desiredAccuracy: options.desiredAccuracy || 10,
+          distanceFilter: options.distanceFilter || 10,
+          stopOnTerminate: false,
+          startOnBoot: !!options.startOnBoot,
+          notification: { title: 'CycleSavvy', text: 'Tracking your ride' }
+        }, function(state) {
+          if (!state.enabled) found.plugin.start();
+        });
+        notify('Background tracking started', 'success');
+        return true;
+      }
+    }
+  } catch (err) {
+    console.error('Failed to start background tracking', err);
+    notify('Failed to start background tracking: ' + (err && err.message ? err.message : err), 'danger');
+    return false;
+  }
+
+  notify('Background tracking plugin detected but API not recognized.', 'warning');
+  return false;
+}
+
+// stopBackgroundTracking()
+async function stopBackgroundTracking() {
+  const found = _findBgPlugin();
+  if (!found) {
+    notify('Background tracking not available in browser.', 'warning');
+    return false;
+  }
+
+  try {
+    if (found.type === 'capacitor') {
+      await found.plugin.stop();
+      notify('Background tracking stopped', 'info');
+      return true;
+    } else if (found.type === 'cordova') {
+      if (found.plugin.stop) {
+        found.plugin.stop();
+        notify('Background tracking stopped', 'info');
+        return true;
+      }
+    }
+  } catch (err) {
+    console.error('Failed to stop background tracking', err);
+    notify('Failed to stop background tracking: ' + (err && err.message ? err.message : err), 'danger');
+    return false;
+  }
+
+  notify('Background tracking plugin detected but stop API not recognized.', 'warning');
+  return false;
+}
+
+// onBackgroundLocation(cb) -> subscribe to native location events
+function onBackgroundLocation(cb) {
+  const found = _findBgPlugin();
+  if (!found) {
+    console.warn('Background plugin not available; onBackgroundLocation is a no-op in browser.');
+    return () => {};
+  }
+
+  if (found.type === 'capacitor') {
+    if (found.plugin.addListener) {
+      const subscription = found.plugin.addListener('location', (data) => {
+        cb(data);
+      });
+      return () => { try { subscription.remove(); } catch(e) {} };
+    }
+  } else if (found.type === 'cordova') {
+    if (found.plugin.on) {
+      // TransistorSoft plugin: bgGeo.on('location', fn)
+      found.plugin.on('location', cb, function(err) { console.error('bg on location err', err); });
+      return () => { try { found.plugin.off && found.plugin.off('location'); } catch(e) {} };
+    }
+    if (found.plugin.watchPosition) {
+      // fallback: watchPosition returns an id
+      const id = found.plugin.watchPosition(cb);
+      return () => { try { found.plugin.clearWatch(id); } catch(e) {} };
+    }
+  }
+
+  console.warn('Background plugin detected but no compatible subscription API found.');
+  return () => {};
+}
+
+
 function formatLengthForSettings(meters) {
   const settings = getUserSettings();
   const units = settings.units || 'metric';
