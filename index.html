@@ -10,69 +10,7 @@
   <title>Biking App</title>
   <link rel="shortcut icon" type="image/x-icon" href="compassicon.png">
 
-  <style>
-    body, html {
-      height: 100%;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #map {
-      flex: 1; /* takes up all space above navbar */
-      width: 100%;
-    }
-
-    .Navbar {
-      height: auto; /* navbar sets its own height */
-    }
-
-    /* Remove button rounding and padding shifts */
-    /* Navbar links: square corners + consistent padding */
-    .navbar .nav-link, 
-    .Navbar .nav-link {
-      border-radius: 0 !important;
-      margin: 0 !important;
-      padding: 0.75rem 1rem !important;
-    }
-
-
-    .navbar-dark .nav-link {
-      color: #f8f9fa !important;
-    }
-    .navbar-dark .nav-link.active {
-      background-color: #0d6efd !important;
-    }
-
-
-    .control-card {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      max-width: 500px;
-    }
-
-    /* Fetch Route Card (centered) */
-    #fetchRouteCard {
-      display: none; /* hidden by default */
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 2000;
-      width: 400px;
-    }
-
-    /* Dropdown menu auto-sizes to content */
-    .dropdown-menu {
-      min-width: max-content !important;
-      width: auto !important;
-      white-space: nowrap;
-      box-sizing: border-box;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -82,28 +20,41 @@
 
   <!-- Main Controls -->
   <div class="card shadow control-card">
-    <div class="card-body text-center">
-      <h5 class="card-title mb-3">Biking Tracker</h5>
-      <div class="d-flex justify-content-between gap-2">
-  
-  <!-- Group 1: Start + Stop -->
-  <div class="btn-group flex-fill" role="group">
-    <button class="btn btn-success" id="start">Start</button>
-    <button class="btn btn-danger" id="stop">Stop</button>
+    <div class="card-body text-center py-2">
+      <h6 class="card-title mb-2">Biking Tracker</h6>
+      <div class="d-flex justify-content-between gap-2 align-items-center">
+
+  <!-- Group 1: Start + Stop (icon-only for compactness) -->
+  <div class="btn-group btn-group-sm flex-fill" role="group" aria-label="Start and stop tracking">
+    <button class="btn btn-success" id="start" aria-label="Start tracking" title="Start">
+      <!-- Play icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M11.596 8.697l-6.363 3.692A.5.5 0 0 1 4 12.999V3.001a.5.5 0 0 1 .733-.441l6.363 3.692a.5.5 0 0 1 0 .874z"/>
+      </svg>
+    </button>
+    <button class="btn btn-danger" id="stop" aria-label="Stop tracking" title="Stop">
+      <!-- Stop icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stop-fill" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M5.5 3.5A1.5 1.5 0 0 0 4 5v6a1.5 1.5 0 0 0 1.5 1.5h5A1.5 1.5 0 0 0 12 11V5a1.5 1.5 0 0 0-1.5-1.5h-5z"/>
+      </svg>
+    </button>
   </div>
 
-  <!-- Group 2: History + Fetch -->
+  <!-- Group 2: History + Fetch (smaller buttons) -->
     <div class="dropdown">
-      <button class="btn btn-info text-white dropdown-toggle" id="history" data-bs-toggle="dropdown" aria-expanded="false">
-        History
+      <button class="btn btn-info btn-sm text-white dropdown-toggle" id="history" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Route history">
+        <!-- history icon + small label -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8.515 2.019a.5.5 0 0 0-.47.324 6.002 6.002 0 1 0 6.137 6.138.5.5 0 0 0-.823-.474 5.002 5.002 0 1 1-5.113-5.113.5.5 0 0 0-.324-.47zm.485 3.481a.5.5 0 0 0-1 0v2.5c0 .138.112.25.25.25h2.25a.5.5 0 0 0 0-1H8.999V5.5z"/>
+        </svg>
       </button>
       <ul class="dropdown-menu" id="routeList" aria-labelledby="history"
           style="max-height: 250px; overflow-y: auto;">
         <!-- Routes injected dynamically -->
       </ul>
     </div>
-    <button class="btn btn-primary" id="fetchBtn">Fetch Route</button>
-  
+    <button class="btn btn-primary btn-sm" id="fetchBtn" title="Fetch route">Fetch Route</button>
+
 
 </div>
 
@@ -118,7 +69,13 @@
         <label class="form-label" for="routeSelect">Select a Route:</label>
         <select id="routeSelect" class="form-select">
           <option value="" selected disabled>Choose a route</option>
-          <option value="/preloaded_routes/iron_horse_trail.gpx">Route 1: Iron Horse Trail</option>
+          <option value="/preloaded_routes/gumbolimbo.gpx">Route 1: Gumbo Limbo</option>
+
+          <option value="/preloaded_routes/ironhorse.gpx">Route 2: Iron Horse Trail</option>
+
+          <option value="/preloaded_routes/laddercanyon.gpx">Route 3: Ladder Canyon</option>
+
+          <option value="/preloaded_routes/middleteton.gpx">Route 4: Middle Teton</option>
           <!-- Add more preloaded GPX routes here -->
         </select>
       </div>
@@ -129,7 +86,7 @@
 
   <div class="Navbar sticky-bottom bg-light">
     <nav class="nav nav-pills flex-column flex-sm-row">
-      <a class="flex-sm-fill text-sm-center nav-link active" aria-current="page" href="#">GPS Stuff</a>
+  <a class="flex-sm-fill text-sm-center nav-link active" aria-current="page" href="#">Ride Map</a>
       <a class="flex-sm-fill text-sm-center nav-link" href="bikerepair.html">Bike Repair</a>
       <a class="flex-sm-fill text-sm-center nav-link" href="safety.html">Safety</a>
       <a class="flex-sm-fill text-sm-center nav-link" href="settings.html">Settings</a>
@@ -148,25 +105,49 @@
     (function () {
       const settings = JSON.parse(localStorage.getItem("cycleSavvySettings")) || {};
 
-      if (settings.darkMode) {
-        document.body.classList.add("bg-dark", "text-light");
-
-        // Fix navbar for dark mode
-        const navbar = document.querySelector(".Navbar");
-        if (navbar) {
-          navbar.classList.remove("bg-light");
-          navbar.classList.add("bg-dark");
-          navbar.querySelectorAll(".nav-link").forEach(link => {
-            link.classList.add("text-light");
-          });
+      function applyDarkMode(enable, animate = false) {
+        if (animate) {
+          document.body.classList.add('theme-transition');
+          setTimeout(() => document.body.classList.remove('theme-transition'), 600);
         }
+        const navbar = document.querySelector('.Navbar');
+        if (enable) {
+          document.body.classList.add('bg-dark', 'text-light');
+          if (navbar) {
+            navbar.classList.remove('bg-light');
+            navbar.classList.add('bg-dark');
+            navbar.querySelectorAll('.nav-link').forEach(link => link.classList.add('text-light'));
+          }
+        } else {
+          document.body.classList.remove('bg-dark', 'text-light');
+          if (navbar) {
+            navbar.classList.remove('bg-dark');
+            navbar.classList.add('bg-light');
+            navbar.querySelectorAll('.nav-link').forEach(link => link.classList.remove('text-light'));
+          }
+        }
+      }
+
+      // If settings request animation (toggle triggered on settings page), animate on load
+      const animateNext = (function () {
+        try {
+          const val = sessionStorage.getItem('themeAnimate');
+          if (val === '1') { sessionStorage.removeItem('themeAnimate'); return true; }
+        } catch (e) {}
+        return false;
+      })();
+
+      applyDarkMode(!!settings.darkMode, animateNext);
+      // Apply saved font size across the app if present
+      if (settings && settings.fontSize) {
+        try { document.documentElement.style.setProperty('--app-font-size', settings.fontSize + 'px'); } catch (e) {}
       }
     })();
   </script>
 
   
 <!-- Toast Container -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 3000">
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 3000">
   <div id="toastBox" class="toast align-items-center text-bg-primary border-0 fade" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
       <div class="toast-body" id="toastMessage">

@@ -1,0 +1,287 @@
+/* Centralized styles for CycleSavvy app */
+
+/* Page layout */
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Map container takes remaining vertical space */
+#map {
+  flex: 1;
+  width: 100%;
+}
+
+/* Navbar container adjustments */
+.Navbar {
+  height: auto; /* navbar sets its own height */
+}
+
+/* Distinct bottom navbar styling so it stands out from page background */
+.Navbar {
+  background-color: rgba(255,255,255,0.95); /* slight translucency for depth */
+  border-top: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+/* Dark-mode navbar variant (used when bg-dark is present on body) */
+body.bg-dark .Navbar {
+  background-color: rgba(30,30,30,0.9);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.6);
+}
+
+/* Remove button rounding and padding shifts for nav links */
+.navbar .nav-link,
+.Navbar .nav-link {
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0.45rem 0.6rem !important;
+  font-size: 0.9rem !important;
+  white-space: nowrap;
+}
+
+/* Keep navbar on a single row and allow horizontal scroll if needed */
+.Navbar .nav {
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+}
+
+/* Make each nav link take equal space and allow shrinking without wrapping */
+.Navbar .nav-link {
+  flex: 1 1 0 !important; /* grow and shrink equally */
+  min-width: 0 !important; /* allow flex items to shrink below content width */
+  text-align: center !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dark-mode navbar link colors */
+.navbar-dark .nav-link {
+  color: #f8f9fa !important;
+}
+.navbar-dark .nav-link.active {
+  background-color: #0d6efd !important;
+}
+
+/* Control card that floats over the map */
+.control-card {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: 500px;
+}
+
+/* Tweak control card typography to keep controls on one line */
+.control-card,
+.control-card .card,
+.control-card .card-body {
+  font-size: 0.92rem; /* slightly smaller than base */
+}
+
+.control-card .btn {
+  font-size: 0.9rem;
+  padding: 0.32rem 0.56rem;
+}
+
+.control-card .card-title {
+  font-size: 0.95rem;
+}
+
+/* Fetch Route Card (centered modal-like) */
+#fetchRouteCard {
+  display: none; /* hidden by default */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  width: 400px;
+}
+
+/* Dropdown menu auto-sizes to content */
+.dropdown-menu {
+  min-width: max-content !important;
+  width: auto !important;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* Page-specific containers */
+main {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+/* For pages with scrollable content */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* Settings page dark-mode tweaks */
+body.bg-dark .card {
+  background-color: #4b4b4b;
+  border-color: #888888;
+}
+body.bg-dark .form-check-label,
+body.bg-dark .card-title,
+body.bg-dark label,
+body.bg-dark h1 {
+  color: #f8f9fa;
+}
+
+/* Utility: make fixed toasts visible above map controls */
+.position-fixed.bottom-0.end-0.p-3 {
+  z-index: 3000;
+}
+
+/* Bike repair page layout */
+main.container {
+  padding: 20px;
+}
+
+/* Small adjustments for accordion look */
+.accordion-button {
+  font-weight: 600;
+}
+
+/* Keep the look consistent across pages */
+.container > h1 {
+  margin-top: 0.5rem;
+}
+
+/* Completed item visual style */
+.accordion-item.completed .accordion-button {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Controls row used on interactive pages */
+.controls-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+.controls-row .form-control {
+  max-width: 300px; /* reduce to help controls fit */
+}
+
+/* Remove heavy focus ring on controls row inputs, but keep a subtle focus for keyboard users */
+.controls-row .form-control:focus {
+  outline: none;
+  box-shadow: none;
+}
+.controls-row .form-control:focus-visible {
+  outline: 2px solid rgba(13,110,253,0.25);
+  outline-offset: 2px;
+}
+
+/* Theme transition animation
+   Add/remove `theme-transition` on <body> to animate color/background changes */
+:root {
+  --theme-transition: 450ms;
+  --app-font-size: 16px;
+}
+body.theme-transition,
+body.theme-transition .card,
+body.theme-transition .Navbar,
+body.theme-transition .nav-link,
+body.theme-transition .form-check-label,
+body.theme-transition label,
+body.theme-transition h1,
+body.theme-transition .accordion-button,
+body.theme-transition .dropdown-menu {
+  transition: background-color var(--theme-transition) ease, color var(--theme-transition) ease, border-color var(--theme-transition) ease;
+}
+
+/* Apply user-controlled base font size */
+html, body {
+  font-size: var(--app-font-size);
+}
+
+/* View-change animation for lists: fade out + slide up, then fade in + slide down */
+.view-change-anim {
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+.view-change-anim.enter {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.view-change-anim.enter.view-change-anim-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+.view-change-anim.exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.view-change-anim.exit.view-change-anim-active {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Route label shown on map when GPX route is loaded */
+.route-label {
+  background: rgba(255,255,255,0.95);
+  color: #111;
+  padding: 6px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  font-weight: 600;
+}
+.route-label .small {
+  display: block;
+  font-weight: 400;
+  color: #555;
+}
+.leaflet-marker-icon.route-label-icon {
+  background: transparent;
+  border: 0;
+}
+
+/* Font preview in settings */
+.font-preview {
+  display: inline-block;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.03);
+  color: inherit;
+}
+body.bg-dark .font-preview {
+  background: rgba(255,255,255,0.04);
+  color: #f1f1f1;
+}
+
+/* restore .content styles */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* Ensure the document body handles scrolling so scrollbar is at the right edge */
+html, body {
+  height: 100%;
+  overflow-y: auto;
+}
+/* Content should not create its own scrolling container */
+.content {
+  overflow: visible;
+}
+
+/* Slightly soften the accordion buttons for readability */
+.accordion-button {
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(245,245,245,0.6));
+}

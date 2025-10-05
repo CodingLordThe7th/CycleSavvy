@@ -9,7 +9,10 @@ const staticAssets = [
   'https://cdn.jsdelivr.net/npm/localforage@1.9.0/dist/localforage.min.js',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js',
-  '/preloaded_routes/iron_horse_trail.gpx'
+  '/preloaded_routes/ironhorse.gpx',
+  '/preloaded_routes/gumbolimbo.gpx',
+  '/preloaded_routes/laddercanyon.gpx',
+  '/preloaded_routes/middleteton.gpx'
 ];
 // Install event: triggered when the service worker is first installed.
 self.addEventListener('install', (event) => {

@@ -6,41 +6,7 @@
   <title>CycleSavvy - Settings</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="shortcut icon" type="image/x-icon" href="compassicon.png">
-  <style>
-    body, html {
-      height: 100%;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    main {
-      flex: 1;
-      padding: 1.5rem;
-    }
-
-    /* Navbar links: square corners + consistent padding */
-    .navbar .nav-link, 
-    .Navbar .nav-link {
-      border-radius: 0 !important;
-      margin: 0 !important;
-      padding: 0.75rem 1rem !important;
-    }
-
-    /* Dark mode styling */
-    body.bg-dark .card {
-      background-color: #4b4b4b;
-      border-color: #888888;
-    }
-    body.bg-dark .form-check-label,
-    body.bg-dark .card-title,
-    body.bg-dark label,
-    body.bg-dark h1 {
-      color: #f8f9fa;
-    }
-
-    
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -66,7 +32,28 @@
         <select id="unitsSelect" class="form-select">
           <option value="metric">Metric (km)</option>
           <option value="imperial">Imperial (miles)</option>
+          <option value="both">Both (km / mi)</option>
         </select>
+      </div>
+    </div>
+
+    <!-- Font Size -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Font Size</h5>
+        <div class="d-flex align-items-center gap-2">
+          <input type="range" id="fontSizeRange" min="12" max="28" step="1" value="16" class="form-range" style="flex:1">
+          <input type="number" id="fontSizeNumber" min="10" max="72" step="1" class="form-control" style="width:90px">
+        </div>
+        <div class="d-flex align-items-center justify-content-between mt-2">
+          <small class="text-muted">Adjust base font size for the app (pixels). Use the slider or the number box.</small>
+          <div>
+            <button id="fontApplyBtn" class="btn btn-sm btn-primary">Apply</button>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span id="fontPreview" class="font-preview">Preview: The quick brown fox jumps over the lazy dog</span>
+        </div>
       </div>
     </div>
 
@@ -95,7 +82,8 @@
   <!-- Navbar -->
   <div class="Navbar sticky-bottom">
     <nav id="mainNavbar" class="nav nav-pills flex-column flex-sm-row bg-light">
-      <a class="flex-sm-fill text-sm-center nav-link" href="index.html">GPS Stuff</a>
+  <a class="flex-sm-fill text-sm-center nav-link" href="index.html">Ride Map</a>
+      
       <a class="flex-sm-fill text-sm-center nav-link" href="bikerepair.html">Bike Repair</a>
       <a class="flex-sm-fill text-sm-center nav-link" href="safety.html">Safety</a>
       <a class="flex-sm-fill text-sm-center nav-link active" aria-current="page" href="#">Settings</a>
@@ -114,21 +102,98 @@
   const notificationsToggle = document.getElementById("notificationsToggle");
   const navbar = document.getElementById("mainNavbar");
 
-  // Apply stored settings
-  if (settings.darkMode) {
-    document.body.classList.add("bg-dark", "text-light");
-    navbar.classList.remove("bg-light");
-    navbar.classList.add("bg-dark", "navbar-dark");
-    darkModeToggle.checked = true;
-  }
-  if (settings.units) unitsSelect.value = settings.units;
-  if (settings.notifications) notificationsToggle.checked = true;
+  // Helper to apply dark mode with optional animation
+  function applyDarkMode(enable, animate = false) {
+    if (animate) {
+      document.body.classList.add('theme-transition');
+      // remove transition class after the CSS duration
+      setTimeout(() => document.body.classList.remove('theme-transition'), 600);
+    }
 
-  // Update on change
+    if (enable) {
+      document.body.classList.add("bg-dark", "text-light");
+      if (navbar) {
+        navbar.classList.remove("bg-light");
+        navbar.classList.add("bg-dark", "navbar-dark");
+      }
+    } else {
+      document.body.classList.remove("bg-dark", "text-light");
+      if (navbar) {
+        navbar.classList.remove("bg-dark", "navbar-dark");
+        navbar.classList.add("bg-light");
+      }
+    }
+  }
+
+  // Apply stored settings (no animation on initial load)
+  // Ensure notifications default to ON if the key is missing
+  if (settings.notifications === undefined) settings.notifications = true;
+  applyDarkMode(!!settings.darkMode, false);
+  darkModeToggle.checked = !!settings.darkMode;
+  if (settings.units) unitsSelect.value = settings.units;
+  notificationsToggle.checked = !!settings.notifications;
+  // Apply stored font size on load so Settings reflects persisted size
+  if (settings && settings.fontSize) {
+    try { document.documentElement.style.setProperty('--app-font-size', settings.fontSize + 'px'); } catch (e) {}
+  }
+
+  // Font size controls
+  const fontSizeRange = document.getElementById('fontSizeRange');
+  const fontSizeNumber = document.getElementById('fontSizeNumber');
+  const fontApplyBtn = document.getElementById('fontApplyBtn');
+  const fontPreview = document.getElementById('fontPreview');
+
+  // Initialize values from settings or defaults (preview-only until Apply)
+  const initialFont = settings.fontSize || 16;
+  fontSizeRange.value = initialFont;
+  fontSizeNumber.value = initialFont;
+  if (fontPreview) fontPreview.style.fontSize = initialFont + 'px';
+
+  // Update preview (no persist) when slider/number change
+  function updatePreview(px) {
+    if (fontPreview) fontPreview.style.fontSize = px + 'px';
+    // keep contrast if dark mode
+    if (document.body.classList.contains('bg-dark')) {
+      if (fontPreview) fontPreview.classList.add('text-light');
+    } else {
+      if (fontPreview) fontPreview.classList.remove('text-light');
+    }
+  }
+
+  fontSizeRange.addEventListener('input', (e) => {
+    const v = e.target.value;
+    fontSizeNumber.value = v;
+    updatePreview(v);
+  });
+
+  fontSizeNumber.addEventListener('input', (e) => {
+    let v = Number(e.target.value) || 16;
+    // clamp
+    if (v < 10) v = 10;
+    if (v > 72) v = 72;
+    fontSizeNumber.value = v;
+    fontSizeRange.value = v;
+    updatePreview(v);
+  });
+
+  // Apply button: persist and apply globally
+  if (fontApplyBtn) fontApplyBtn.addEventListener('click', () => {
+    const v = Number(fontSizeNumber.value) || 16;
+    settings.fontSize = v;
+    localStorage.setItem('cycleSavvySettings', JSON.stringify(settings));
+    try { document.documentElement.style.setProperty('--app-font-size', v + 'px'); } catch (e) {}
+    showToast('Font size applied: ' + v + 'px', 'info');
+  });
+
+  // Update on change (animate and persist without reload)
   darkModeToggle.addEventListener("change", () => {
     settings.darkMode = darkModeToggle.checked;
     localStorage.setItem("cycleSavvySettings", JSON.stringify(settings));
-    location.reload();
+    // animate current page
+    applyDarkMode(settings.darkMode, true);
+    // set a flag so the next page navigated to can animate too
+    try { sessionStorage.setItem('themeAnimate', '1'); } catch (e) {}
+    showToast("Theme " + (settings.darkMode ? "enabled" : "disabled"), "info");
   });
 
   unitsSelect.addEventListener("change", () => {
@@ -141,6 +206,10 @@
     settings.notifications = notificationsToggle.checked;
     localStorage.setItem("cycleSavvySettings", JSON.stringify(settings));
     showToast("Notifications " + (settings.notifications ? "enabled" : "disabled"), "info");
+    // If enabling and browser supports Notification API, request permission
+    if (settings.notifications && window.Notification && Notification.permission === 'default') {
+      try { Notification.requestPermission(); } catch(e) {}
+    }
   });
 
   // Reset Ride History
@@ -180,7 +249,7 @@
 </script>
 
 
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 3000">
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 3000">
   <div id="toastBox" class="toast align-items-center text-bg-primary border-0 fade" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
       <div class="toast-body" id="toastMessage">

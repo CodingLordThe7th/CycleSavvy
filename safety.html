@@ -6,85 +6,28 @@
     <title>Safety Tips - CycleSavvy</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="shortcut icon" type="image/x-icon" href="compassicon.png">
-    <style>
-      body, html {
-        height: 100%;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-      }
-      .content {
-        flex: 1;
-        overflow-y: auto;
-        padding: 20px;
-      }
-      .Navbar {
-        height: auto;
-      }
-      /* Navbar links: square corners + consistent padding */
-        .navbar .nav-link, 
-        .Navbar .nav-link {
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0.75rem 1rem !important;
-        }
-
-    </style>
+    <link rel="stylesheet" href="style.css">
   </head>
-  <!-- Toast Container -->
 
   <body>
-    <div class="content container">
-  <h1 class="mb-4">Cycling Safety Tips</h1>
-  <ul class="list-group">
-    <li class="list-group-item">
-      <strong>Wear a Helmet:</strong> Always wear a properly fitted helmet. 
-      <em>It significantly reduces the risk of serious head injuries in case of accidents.</em>
-    </li>
-    <li class="list-group-item">
-      <strong>Be Visible:</strong> Use front and rear lights and wear reflective gear. 
-      <em>Drivers often overlook cyclists, so visibility ensures you’re seen day and night.</em>
-    </li>
-    <li class="list-group-item">
-      <strong>Check Your Bike:</strong> Brakes, tires, and chain should be inspected before every ride. 
-      <em>Mechanical failures at high speed can cause accidents and leave you stranded.</em>
-    </li>
-    <li class="list-group-item">
-      <strong>Follow the Rules:</strong> Ride with traffic, obey signs, and use hand signals. 
-      <em>This builds trust with drivers and prevents collisions at intersections.</em>
-    </li>
-    <li class="list-group-item">
-      <strong>Stay Alert:</strong> Watch for cars, pedestrians, and road hazards. 
-      <em>Quick reactions to potholes, doors opening, or sudden stops can save your life.</em>
-    </li>
-    <li class="list-group-item">
-      <strong>Carry Essentials:</strong> Bring water, ID, and a repair kit. 
-      <em>Being prepared keeps you hydrated, safe, and able to fix small breakdowns.</em>
-    </li>
-    <li class="list-group-item">
-      <strong>Use Bike Lanes:</strong> Stick to designated cycling lanes whenever possible. 
-      <em>They’re designed to give you more space and protection from cars.</em>
-    </li>
-    <li class="list-group-item">
-      <strong>Control Your Speed:</strong> Slow down in crowded areas and intersections. 
-      <em>Riding too fast limits reaction time and increases stopping distance.</em>
-    </li>
-    <li class="list-group-item">
-      <strong>Make Eye Contact:</strong> Ensure drivers see you before crossing or turning. 
-      <em>Eye contact reduces misunderstandings and prevents dangerous moves by cars.</em>
-    </li>
-    <li class="list-group-item">
-      <strong>Avoid Headphones:</strong> Keep your ears free. 
-      <em>You need to hear honks, sirens, or approaching vehicles to react in time.</em>
-    </li>
-  </ul>
-</div>
+    <main class="container">
+      <div class="content">
+      <h1 class="mb-4">Cycling Safety Tips</h1>
 
+      <div class="controls-row mb-2">
+        <input id="safetySearch" class="form-control" placeholder="Search safety tips...">
+        <button id="safetyExpandAll" class="btn btn-sm btn-outline-primary ms-2">View all</button>
+      </div>
+
+      <div class="accordion" id="safetyAccordion">
+        <!-- Generated safety tips will be rendered here -->
+      </div>
+    </main>
 
     <!-- Navbar -->
     <div class="Navbar sticky-bottom bg-light">
       <nav class="nav nav-pills flex-column flex-sm-row">
-        <a class="flex-sm-fill text-sm-center nav-link" href="index.html">GPS Stuff</a>
+  <a class="flex-sm-fill text-sm-center nav-link" href="index.html">Ride Map</a>
         <a class="flex-sm-fill text-sm-center nav-link" href="bikerepair.html">Bike Repair</a>
         <a class="flex-sm-fill text-sm-center nav-link active" aria-current="page" href="#">Safety</a>
         <a class="flex-sm-fill text-sm-center nav-link" href="settings.html">Settings</a>
@@ -93,27 +36,114 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        (function () {
-            const settings = JSON.parse(localStorage.getItem("cycleSavvySettings")) || {};
+      (function () {
+        const settings = JSON.parse(localStorage.getItem("cycleSavvySettings")) || {};
 
-            if (settings.darkMode) {
-            document.body.classList.add("bg-dark", "text-light");
-
-            // Fix navbar for dark mode
-            const navbar = document.querySelector(".Navbar");
+        function applyDarkMode(enable, animate = false) {
+          if (animate) {
+            document.body.classList.add('theme-transition');
+            setTimeout(() => document.body.classList.remove('theme-transition'), 600);
+          }
+          const navbar = document.querySelector('.Navbar');
+          if (enable) {
+            document.body.classList.add('bg-dark', 'text-light');
             if (navbar) {
-                navbar.classList.remove("bg-light");
-                navbar.classList.add("bg-dark");
-                navbar.querySelectorAll(".nav-link").forEach(link => {
-                link.classList.add("text-light");
-                });
+              navbar.classList.remove('bg-light');
+              navbar.classList.add('bg-dark');
+              navbar.querySelectorAll('.nav-link').forEach(link => link.classList.add('text-light'));
             }
+          } else {
+            document.body.classList.remove('bg-dark', 'text-light');
+            if (navbar) {
+              navbar.classList.remove('bg-dark');
+              navbar.classList.add('bg-light');
+              navbar.querySelectorAll('.nav-link').forEach(link => link.classList.remove('text-light'));
             }
+          }
+        }
+
+        const animateNext = (function () {
+          try {
+            const val = sessionStorage.getItem('themeAnimate');
+            if (val === '1') { sessionStorage.removeItem('themeAnimate'); return true; }
+          } catch (e) {}
+          return false;
         })();
+        applyDarkMode(!!settings.darkMode, animateNext);
+        // apply saved font size if available
+        if (settings && settings.fontSize) {
+          try { document.documentElement.style.setProperty('--app-font-size', settings.fontSize + 'px'); } catch (e) {}
+        }
+
+        // safety tips provided by user (25 items)
+        const safetyTips = [
+          { title: 'Always wear a properly fitting helmet', body: 'A helmet can reduce the risk of head injury in a crash.' },
+          { title: 'Make sure it sits level and the straps form a V under your ears', body: 'Make sure it sits level, covers the forehead, and the straps form a “V” under your ears.' },
+          { title: 'Use lights and reflectors, and wear visible clothing', body: 'Be conspicuous — use a white front light, red rear light, side reflectors, and wear bright or reflective clothes.' },
+          { title: 'In low light or at night, have good lighting', body: 'In low light or at night, having good lighting is essential.' },
+          { title: 'Obey traffic laws & ride predictably', body: 'Bicyclists have the same rights and responsibilities as motorists. Stop at lights and signs, signal your turns, and ride in the direction of traffic.' },
+          { title: 'Ride in a straight line and avoid weaving', body: 'Ride in a straight line, avoid weaving between parked cars, and make your movements predictable to other road users.' },
+          { title: 'Be alert, avoid distractions', body: 'Don’t use your phone or wear earphones that block traffic sounds. Keep your senses tuned to the road and surroundings.' },
+          { title: 'Watch ahead for road hazards', body: 'Watch ahead for road hazards (potholes, debris, uneven pavement).' },
+          { title: 'Check your bike before every ride (pre-ride inspection)', body: 'Tires: correct inflation and no obvious damage. Brakes: pads and cables should function properly. Chain and drivetrain: clean, lubricated, no kinks. Tightness: quick releases, bolts, seatpost, etc.' },
+          { title: 'Stay out of the “door zone” and avoid parked cars', body: 'Leave sufficient space (about 3 feet) from parked cars so you won’t get hit by opening doors.' },
+          { title: 'Use hand signals and make eye contact', body: 'Signal turns or lane changes well in advance. When possible, make eye contact with drivers to confirm they see you.' },
+          { title: 'Ride in the proper lane position', body: 'Use the rightmost lane in the direction you\'re going, unless making a left turn or avoiding hazards. Avoid riding too far to the right where drivers may not expect you.' },
+          { title: 'Plan safer routes & avoid risky roads', body: 'Pick roads with lower traffic, slower speeds, or dedicated bike lanes. Be especially cautious at intersections.' },
+          { title: 'Ride single file & avoid crossing paths unpredictably', body: 'Riding side by side in traffic can cause confusion for drivers. Signal clearly and avoid sudden moves.' },
+          { title: 'Watch for large vehicles and avoid their blind spots', body: 'Trucks, buses, and large vehicles often can\'t see cyclists that are too close or in certain zones. Be extra cautious when they are turning.' },
+          { title: 'Be especially careful at intersections', body: 'Many accidents occur where streets cross. Look left-right-left, and behind you before entering or crossing.' },
+          { title: 'Adapt to conditions: slow down in wet or slippery surfaces', body: 'Wet roads, gravel, leaves, or debris reduce traction. Ride slower and brake gently.' },
+          { title: 'Be wary of painted lines and metal surfaces when wet', body: 'Painted lines, metal grates, and drainage covers are especially slippery when wet.' },
+          { title: 'Don’t ride under the influence', body: 'Alcohol or drugs impair your reaction time, balance, and decision-making. Stay sober and alert when riding.' },
+          { title: 'Use audible signals when needed', body: 'In busy areas or when passing pedestrians, use a bell or horn to give friendly warning.' },
+          { title: 'Ride a bike that fits you properly', body: 'A properly sized bike helps you maintain control, avoid overreaching, and reduces fatigue or strain.' },
+          { title: 'Always check your equipment before riding', body: 'Do a quick pre-ride inspection: tires inflated, brakes working, chain moving smoothly, reflectors and lights in place.' },
+          { title: 'Wear a helmet that fits correctly', body: 'The helmet should meet safety standards, sit level on your head, have straps that form a “V” under your ears, and not wobble.' },
+          { title: 'Don’t use headphones while riding', body: 'Being able to hear traffic, horns, and other warning sounds is crucial for safety.' },
+          { title: 'Use lights and high-visibility / reflective gear', body: 'Especially at dusk, dawn, or night. Having both front and rear lights, and reflectors or bright gear, helps others see you.' },
+          { title: 'Obey traffic laws & ride with the traffic flow', body: 'Ride on the right side, follow stop signs, obey lights, use hand signals. Riding against traffic increases accident risk.' }
+        ];
+
+        const safetyContainer = document.getElementById('safetyAccordion');
+        function renderSafety() {
+          safetyContainer.innerHTML = '';
+          safetyTips.forEach((tip, i) => {
+            const id = 'safety' + (i+1);
+            const html = `\n              <div class="accordion-item">\n                <h2 class="accordion-header" id="${id}">\n                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${id}c" aria-expanded="false" aria-controls="${id}c">\n                    ${tip.title}\n                  </button>\n                </h2>\n                <div id="${id}c" class="accordion-collapse collapse" aria-labelledby="${id}" data-bs-parent="#safetyAccordion">\n                  <div class="accordion-body">\n                    ${tip.body}\n                  </div>\n                </div>\n              </div>\n            `;
+            safetyContainer.insertAdjacentHTML('beforeend', html);
+          });
+        }
+
+        renderSafety();
+
+        // wire search
+        const search = document.getElementById('safetySearch');
+        if (search) search.addEventListener('input', () => {
+          const q = search.value.trim().toLowerCase();
+          document.querySelectorAll('#safetyAccordion .accordion-item').forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = (!q || text.includes(q)) ? '' : 'none';
+          });
+        });
+
+        // wire view all
+        const viewAll = document.getElementById('safetyExpandAll');
+        if (viewAll) viewAll.addEventListener('click', () => document.querySelectorAll('#safetyAccordion .accordion-collapse').forEach(c => new bootstrap.Collapse(c, { show: true }).show()));
+
+        // reset filters (clear search + collapse all)
+        const resetBtn = document.getElementById('safetyResetFilters');
+        if (resetBtn) resetBtn.addEventListener('click', () => {
+          const s = document.getElementById('safetySearch'); if (s) s.value = '';
+          document.querySelectorAll('#safetyAccordion .accordion-item').forEach(item => item.style.display = '');
+          document.querySelectorAll('#safetyAccordion .accordion-collapse').forEach(c => new bootstrap.Collapse(c, { hide: true }).hide());
+        });
+
+      })();
     </script>
 
-    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 3000">
-    <div id="toastBox" class="toast align-items-center text-bg-primary border-0 fade" role="alert" aria-live="assertive" aria-atomic="true">
+  <div class="position-fixed top-0 end-0 p-3" style="z-index: 3000">
+  <div id="toastBox" class="toast align-items-center text-bg-primary border-0 fade" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
         <div class="toast-body" id="toastMessage">
             <!-- Message will go here -->

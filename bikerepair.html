@@ -6,32 +6,7 @@
     <title>Bike Repair Guide</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="shortcut icon" type="image/x-icon" href="compassicon.png">
-    <style>
-      body, html {
-        height: 100%;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-      }
-
-      main {
-        flex: 1;
-        overflow-y: auto;
-        padding: 20px;
-      }
-
-      .Navbar {
-        height: auto;
-      }
-      /* Navbar links: square corners + consistent padding */
-      .navbar .nav-link, 
-      .Navbar .nav-link {
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0.75rem 1rem !important;
-      }
-
-    </style>
+    <link rel="stylesheet" href="style.css">
   </head>
   
 
@@ -40,162 +15,38 @@
     <main class="container">
       <h1 class="text-center my-4">🚴 Bike Repair Guide</h1>
       <p class="lead text-center">Quick fixes and prevention tips for common issues.</p>
+    
+    
 
-      <!-- Accordion -->
-      <div class="accordion" id="repairGuide">
-        
-        <!-- 1. Flat or Soft Tires -->
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="headingTires">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTires" aria-expanded="false" aria-controls="collapseTires">
-              1. Flat or Soft Tires
-            </button>
-          </h2>
-          <div id="collapseTires" class="accordion-collapse collapse" aria-labelledby="headingTires" data-bs-parent="#repairGuide">
-            <div class="accordion-body">
-              <strong>Steps to Fix:</strong>
-              <ul>
-                <li>Pump up tire to the correct pressure.</li>
-                <li>If it won’t hold air, remove the wheel, check the tube, and patch or replace it.</li>
-              </ul>
-              <strong>Prevention Tip:</strong>
-              <p>Always check tire pressure before rides and avoid sharp objects on the road.</p>
-            </div>
-          </div>
+    <!-- General mechanical & wear-and-tear issues (generated) -->
+    <section class="container my-4">
+      <h2 class="mb-3">General mechanical & wear-and-tear issues</h2>
+      <div class="controls-row mb-2">
+        <label for="categorizeSelect" class="form-label mb-0 me-2">View:</label>
+        <select id="categorizeSelect" class="form-select" style="max-width:320px">
+          <option value="alphabetical">Alphabetical</option>
+          <option value="severity">By severity</option>
+          <option value="type">By type</option>
+        </select>
+        <div class="input-group ms-2" style="max-width:380px">
+          <span class="input-group-text">Search:</span>
+          <input id="generalSearch" class="form-control form-control-sm" placeholder="general issues">
         </div>
-
-        <!-- 2. Chain Slipping -->
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="headingChain">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChain" aria-expanded="false" aria-controls="collapseChain">
-              2. Chain Slipping / Gear Shifting Problems
-            </button>
-          </h2>
-          <div id="collapseChain" class="accordion-collapse collapse" aria-labelledby="headingChain" data-bs-parent="#repairGuide">
-            <div class="accordion-body">
-              <strong>Steps to Fix:</strong>
-              <ul>
-                <li>Clean and lubricate the chain.</li>
-                <li>Adjust derailleur alignment using screws or barrel adjuster.</li>
-                <li>Replace worn chain or cassette if needed.</li>
-              </ul>
-              <strong>Prevention Tip:</strong>
-              <p>Keep the drivetrain clean and avoid shifting under heavy load.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. Brakes -->
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="headingBrakes">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBrakes" aria-expanded="false" aria-controls="collapseBrakes">
-              3. Squeaky or Weak Brakes
-            </button>
-          </h2>
-          <div id="collapseBrakes" class="accordion-collapse collapse" aria-labelledby="headingBrakes" data-bs-parent="#repairGuide">
-            <div class="accordion-body">
-              <strong>Steps to Fix:</strong>
-              <ul>
-                <li>Clean brake pads and rims (or rotors if disc brakes).</li>
-                <li>Adjust brake alignment and cable tension.</li>
-                <li>Replace worn pads or damaged parts.</li>
-              </ul>
-              <strong>Prevention Tip:</strong>
-              <p>Check brakes before rides and keep rims/rotors clean.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. Handlebars -->
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="headingBars">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBars" aria-expanded="false" aria-controls="collapseBars">
-              4. Loose / Wobbly Handlebars, Stem, or Headset
-            </button>
-          </h2>
-          <div id="collapseBars" class="accordion-collapse collapse" aria-labelledby="headingBars" data-bs-parent="#repairGuide">
-            <div class="accordion-body">
-              <strong>Steps to Fix:</strong>
-              <ul>
-                <li>Tighten stem bolts evenly with an Allen key.</li>
-                <li>Adjust headset so it feels snug but still turns smoothly.</li>
-              </ul>
-              <strong>Prevention Tip:</strong>
-              <p>Check for play in the front end before rides.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 5. Wheels -->
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="headingWheels">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWheels" aria-expanded="false" aria-controls="collapseWheels">
-              5. Wheel Out of True / Spokes Loose
-            </button>
-          </h2>
-          <div id="collapseWheels" class="accordion-collapse collapse" aria-labelledby="headingWheels" data-bs-parent="#repairGuide">
-            <div class="accordion-body">
-              <strong>Steps to Fix:</strong>
-              <ul>
-                <li>Spin the wheel and see where it wobbles.</li>
-                <li>Use a spoke wrench to tighten or loosen spokes carefully.</li>
-                <li>Replace rim if it’s too bent.</li>
-              </ul>
-              <strong>Prevention Tip:</strong>
-              <p>Avoid potholes and check wheels after rough rides.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 6. Seat Post -->
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="headingSeat">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeat" aria-expanded="false" aria-controls="collapseSeat">
-              6. Seat Post or Saddle Slipping / Stuck
-            </button>
-          </h2>
-          <div id="collapseSeat" class="accordion-collapse collapse" aria-labelledby="headingSeat" data-bs-parent="#repairGuide">
-            <div class="accordion-body">
-              <strong>Steps to Fix:</strong>
-              <ul>
-                <li>If slipping, tighten the seat clamp.</li>
-                <li>If stuck, add penetrating oil and gently work it loose.</li>
-                <li>Re-grease before reinstalling.</li>
-              </ul>
-              <strong>Prevention Tip:</strong>
-              <p>Clean and grease the seat post regularly, especially after wet rides.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 7. Rattles -->
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="headingNoise">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNoise" aria-expanded="false" aria-controls="collapseNoise">
-              7. Rattles and Noises
-            </button>
-          </h2>
-          <div id="collapseNoise" class="accordion-collapse collapse" aria-labelledby="headingNoise" data-bs-parent="#repairGuide">
-            <div class="accordion-body">
-              <strong>Steps to Fix:</strong>
-              <ul>
-                <li>Check all bolts (pedals, racks, bottle cages, stem, seat post).</li>
-                <li>Tighten anything loose.</li>
-                <li>Lubricate moving parts (avoid brake surfaces).</li>
-              </ul>
-              <strong>Prevention Tip:</strong>
-              <p>Inspect bolts and accessories after bumpy rides.</p>
-            </div>
-          </div>
-        </div>
-
+        <button id="generalViewAll" class="btn btn-sm btn-primary ms-2">View all</button>
       </div>
+
+      <div id="generalContainer">
+        <div class="accordion" id="generalAccordion">
+          <!-- generated items go here -->
+        </div>
+      </div>
+    </section>
     </main>
 
     <!-- Navbar -->
     <div class="Navbar sticky-bottom bg-light">
       <nav class="nav nav-pills flex-column flex-sm-row">
-        <a class="flex-sm-fill text-sm-center nav-link" href="index.html">GPS Stuff</a>
+  <a class="flex-sm-fill text-sm-center nav-link" href="index.html">Ride Map</a>
         <a class="flex-sm-fill text-sm-center nav-link active" aria-current="page" href="#">Bike Repair</a>
         <a class="flex-sm-fill text-sm-center nav-link" href="safety.html">Safety</a>
         <a class="flex-sm-fill text-sm-center nav-link" href="settings.html">Settings</a>
@@ -206,25 +57,367 @@
 
     <script>
       (function () {
+        // Theme helper
         const settings = JSON.parse(localStorage.getItem("cycleSavvySettings")) || {};
-
-        if (settings.darkMode) {
-          document.body.classList.add("bg-dark", "text-light");
-
-          // Fix navbar for dark mode
-          const navbar = document.querySelector(".Navbar");
-          if (navbar) {
-            navbar.classList.remove("bg-light");
-            navbar.classList.add("bg-dark");
-            navbar.querySelectorAll(".nav-link").forEach(link => {
-              link.classList.add("text-light");
-            });
+  // (no page-friendly background — keep default site styles)
+        function applyDarkMode(enable, animate = false) {
+          if (animate) {
+            document.body.classList.add('theme-transition');
+            setTimeout(() => document.body.classList.remove('theme-transition'), 600);
+          }
+          const navbar = document.querySelector('.Navbar');
+          if (enable) {
+            document.body.classList.add('bg-dark', 'text-light');
+            if (navbar) {
+              navbar.classList.remove('bg-light');
+              navbar.classList.add('bg-dark');
+              navbar.querySelectorAll('.nav-link').forEach(link => link.classList.add('text-light'));
+            }
+          } else {
+            document.body.classList.remove('bg-dark', 'text-light');
+            if (navbar) {
+              navbar.classList.remove('bg-dark');
+              navbar.classList.add('bg-light');
+              navbar.querySelectorAll('.nav-link').forEach(link => link.classList.remove('text-light'));
+            }
           }
         }
+
+        const animateNext = (function () {
+          try {
+            const val = sessionStorage.getItem('themeAnimate');
+            if (val === '1') { sessionStorage.removeItem('themeAnimate'); return true; }
+          } catch (e) {}
+          return false;
+        })();
+        applyDarkMode(!!settings.darkMode, animateNext);
+        // apply saved font size if available
+        if (settings && settings.fontSize) {
+          try { document.documentElement.style.setProperty('--app-font-size', settings.fontSize + 'px'); } catch (e) {}
+        }
+
+        // Interactive repair page: search + expand/collapse
+
+        // search
+        const search = document.getElementById('repairSearch');
+        if (search) {
+          search.addEventListener('input', () => {
+            const q = search.value.trim().toLowerCase();
+            document.querySelectorAll('.accordion-item').forEach(item => {
+              const text = item.textContent.toLowerCase();
+              item.style.display = (!q || text.includes(q)) ? '' : 'none';
+            });
+          });
+        }
+
+        // expand/collapse
+        const expandAll = document.getElementById('expandAll');
+        const collapseAll = document.getElementById('collapseAll');
+        if (expandAll) expandAll.addEventListener('click', () => document.querySelectorAll('.accordion-collapse').forEach(c => new bootstrap.Collapse(c, { show: true }).show()));
+        if (collapseAll) collapseAll.addEventListener('click', () => document.querySelectorAll('.accordion-collapse').forEach(c => new bootstrap.Collapse(c, { hide: true }).hide()));
+
+        // reset filters (clear search + collapse all)
+        const resetFilters = document.getElementById('resetFilters');
+        if (resetFilters) resetFilters.addEventListener('click', () => {
+          const s = document.getElementById('repairSearch'); if (s) s.value = '';
+          document.querySelectorAll('.accordion-item').forEach(item => item.style.display = '');
+          document.querySelectorAll('.accordion-collapse').forEach(c => new bootstrap.Collapse(c, { hide: true }).hide());
+        });
+
+      })();
+    </script>
+    <script>
+      (function () {
+        const generalIssues = [
+          "Flat tires / punctures — nails, glass, thorns, sharp debris in road",
+          "Tube pinching / pinch flats — when tube gets pinched between tire bead and rim",
+          "Worn or cracked tires / sidewall damage",
+          "Poor or low tire pressure",
+          "Worn out or stretched chain",
+          "Rusty, stiff, or seized chain links",
+          "Chain skipping / slipping under load",
+          "Broken or bent chain links",
+          "Broken chain (snap)",
+          "Poor chain lubrication / excess grime",
+          "Derailleur / shifting mechanism misadjustment",
+          "Bent derailleur hanger",
+          "Worn cassette, cogs, or chainrings (gear teeth worn)",
+          "Cable stretch or cable housing friction",
+          "Frayed or damaged cables / housings",
+          "Limit screws on derailleurs incorrectly set",
+          "Worn or misaligned jockey / pulleys in derailleur",
+          "Shifter malfunction or internal wear",
+          "Loose bolts / fasteners (on stem, handlebars, seat, crank, etc.)",
+          "Loose or slipping seatpost",
+          "Seatpost corrosion (seizing in frame)",
+          "Crank arms loose or play in bottom bracket",
+          "Worn bottom bracket bearings / spindle",
+          "Incorrect bottom bracket adjustment (too tight / too loose cones)",
+          "Pedal threads stripped or damaged",
+          "Pedal bearings failing / play in pedals",
+          "Bent or misaligned wheels / rims (out of true / wobble)",
+          "Broken or loose spokes",
+          "Wheel hub bearings worn / needing adjustment or replacement",
+          "Loose axle nuts or quick-release skewers",
+          "Brake issues — worn brake pads",
+          "Brake pad misalignment",
+          "Brake cable stretch / slack",
+          "Frayed or corroded brake cables / housing",
+          "Brake pad contamination (oil, grease, dirt on pads or rims / rotors)",
+          "Rim damage (grooves, wear) reducing braking effectiveness",
+          "Warped rim or bent rim (pads rubbing intermittently)",
+          "Rotor / disc brake rotor warping",
+          "Hydraulic brake problems — leaks, air in system, loss of fluid",
+          "Brake caliper misalignment",
+          "Brake lever issues (loose, misadjusted, too much travel)",
+          "Loose headset or worn headset bearings",
+          "Misaligned handlebars / stem / fork alignment",
+          "Faulty / misaligned headset spacers",
+          "Frame cracks or structural failure",
+          "Crack in fork or frame tube",
+          "Corrosion or rust in frame, components",
+          "Seized or stuck quick-release mechanisms",
+          "Poorly greased or dry bearings in hubs, headset, bottom bracket",
+          "Loose or missing washers, spacers, or shims",
+          "Seat / saddle loose or broken rails",
+          "Handlebar grips loose or slipping",
+          "Faulty or loose stem clamp",
+          "Accessories interfering — fenders, racks, panniers hitting spokes or frame",
+          "Chain suck (chain sticking to chainring during shifts)",
+          "Chain dropping off chainring / cassette",
+          "Mis-indexed shifting (delay, hesitation, mis-shifts)",
+          "Poor or inappropriate component compatibility (e.g. mismatched cassette & chain speed rating)",
+          "Incorrect torque application (over-tightening bolts, leading to damage)",
+          "Loose or broken reflectors, lights, or mounts interfering mechanically",
+          "Cable routing causing friction, binding, or kinked housing",
+          "Dust, mud, grit, grit ingress into components",
+          "Contamination / ingress of water into bearings, hubs, bottom bracket",
+          "Seal failure / worn seals on hubs or headset",
+          "Component fatigue or microfracture failure",
+          "Improper installation / alignment of parts",
+          "Frame or component misalignment from previous crash or impact",
+          "Interference between moving parts (chain rubbing against frame, tire rubbing fender, etc.)",
+          "Overextension or overloading of bike (carrying too much weight)",
+          "Loose or missing head tube parts / retaining hardware",
+          "Damaged or loose gear pulley bolts",
+          "Wear in bushings or pivot joints (on suspension, if applicable)",
+          "Suspension fork or rear shock issues (leaks, worn seals, binding, play)",
+          "Misadjusted or worn suspension damping / rebound springs",
+          "Corroded or seized bolts or pivot linkage parts",
+          "Crack in carbon fiber parts (if bike has CF components)",
+          "Electronics / wiring issues (if bike has electronic shifting, lights, sensors)",
+          "Battery failures / connection issues (for e-bikes or lights / accessories)",
+          "Sensor / magnet position misalignment (for cadence, speed, power sensors)",
+          "Poorly installed tire bead / bead not seated properly",
+          "Bead “burping” (for tubeless tires losing seal)",
+          "Dry, old, or dried-up tubeless sealant",
+          "Valve stem leaks or damage (tube or tubeless valves)",
+          "Valve core loose or defective",
+          "Stem / handlebar fatigue or crack from stress / overloading",
+          "Poor frame / component tolerances or manufacturing defects",
+          "Thread damage in component threads (e.g. in crank, pedals, stems)",
+          "Cross-threading when installing bolts / parts",
+          "Overstretching or damage to shift / brake housing from poor routing",
+          "Insufficient clearance between tire and frame / fork",
+          "Tire rubbing against frame or fork",
+          "Chainline misalignment",
+          "Excess chain slack (on single-speed or internal-gear hub bikes)",
+          "Internal-gear hub issues / malfunctions",
+          "Freehub / freewheel mechanism failure / wear",
+          "Seized or stuck freehub pawls or bearings",
+          "Hub flange cracking or fatigue",
+          "Loose or missing end caps on hubs",
+          "Bearing Race damage (cup/cone, cartridge bearings)",
+          "Drivetrain misalignment from bent axle or dropout",
+          "Poor or missing lubrication in pivot points (brakes, derailleurs, linkages)",
+          "Metal fatigue or fatigue cracking over time",
+          "Excess vibration loosening parts over time",
+          "Using wrong size or spec parts (e.g. wrong wheel size, wrong axle type, wrong chain width)",
+          "Damage from impacts / crashes (dents, bends, misalignment, broken parts)",
+          "Temperature / thermal expansion issues (rare but possible under extreme conditions)",
+          "Improper packing / storage issues (bent wheels, compressed tires, frame twist)",
+          "Corrosion from salt, moisture, chemicals",
+          "Poor maintenance / neglect over time leading to cumulative failures",
+          "User error / misuse (improper shifting under heavy load, cross-chaining, abrupt force, etc.)"
+        ];
+
+        function detectSeverity(text) {
+          const high = ['broken','crack','seized','failure','warp','snap','leak','structur','fracture'];
+          const medium = ['worn','corrosion','mis','loose','rattle','play','stretch','contamination','binding'];
+          const t = text.toLowerCase();
+          if (high.some(k => t.includes(k))) return 'High';
+          if (medium.some(k => t.includes(k))) return 'Medium';
+          return 'Low';
+        }
+
+        function detectType(text) {
+          const t = text.toLowerCase();
+          if (/(tire|tube|bead|valve|seal)/.test(t)) return 'Tire';
+          if (/(chain|derailleur|shifter|cassette|chainring|chainline|dropout)/.test(t)) return 'Drivetrain';
+          if (/(brake|rotor|pad|caliper|hydraulic)/.test(t)) return 'Brakes';
+          if (/(wheel|rim|spoke|hub|bearing|freehub)/.test(t)) return 'Wheels & Hubs';
+          if (/(frame|fork|crack|carbon|structur)/.test(t)) return 'Frame & Fork';
+          if (/(suspension|shock|damping|rebound)/.test(t)) return 'Suspension';
+          if (/(cable|housing|fray|routing)/.test(t)) return 'Cables & Routing';
+          if (/(electronic|battery|sensor|magnet|ebike|electro)/.test(t)) return 'Electronics';
+          return 'General';
+        }
+
+        function renderGeneral(view) {
+          const container = document.getElementById('generalAccordion');
+          container.innerHTML = '';
+          let items = generalIssues.map((text, i) => ({ id: 'g'+i, text, severity: detectSeverity(text), type: detectType(text) }));
+          if (view === 'alphabetical') items.sort((a,b) => a.text.localeCompare(b.text));
+          else if (view === 'severity') items.sort((a,b) => ({'High':0,'Medium':1,'Low':2}[a.severity] - {'High':0,'Medium':1,'Low':2}[b.severity] || a.text.localeCompare(b.text)));
+          else if (view === 'type') items.sort((a,b) => a.type.localeCompare(b.type) || a.text.localeCompare(b.text));
+          // helper to generate short fix and prevention text
+    function shortFixAndPrevention(item) {
+      const t = item.text.toLowerCase();
+      let fix = 'Inspect the component and perform standard repair or replacement as appropriate.';
+      let prevent = 'Regular maintenance and inspection to catch wear early.';
+
+      // Tires
+      if (item.type === 'Tire' || /tire|tube|valve|bead|puncture|burp/.test(t)) {
+        fix = 'Remove the wheel, patch or replace the tube/tire, check rim tape and reseat the tire. For tubeless, re-seal and refill sealant.';
+        prevent = 'Keep correct tire pressure, use puncture-resistant liners or tougher tires, and avoid debris when possible.';
+      }
+
+      // Drivetrain
+      if (item.type === 'Drivetrain' || /chain|derailleur|shifter|cassette|chainring|chainline/.test(t)) {
+        fix = 'Clean and lubricate the chain; replace worn chain/cassette/chainring; realign or replace bent derailleur hanger; adjust indexing.';
+        prevent = 'Keep drivetrain clean and well-lubricated, replace chain at recommended intervals, and avoid cross-chaining.';
+      }
+
+      // Brakes
+      if (item.type === 'Brakes' || /brake|rotor|pad|caliper|hydraulic/.test(t)) {
+        fix = 'Inspect pads/rotors; align calipers; replace worn pads; bleed hydraulic systems if spongy; true rims if necessary.';
+        prevent = 'Check pads regularly, avoid contaminating pads/rotors with oil, and service hydraulic lines per manufacturer.';
+      }
+
+      // Wheels & Hubs
+      if (item.type === 'Wheels & Hubs' || /wheel|rim|spoke|hub|bearing|freehub/.test(t)) {
+        fix = 'True the wheel, tighten/replace broken spokes, service or replace hub bearings, and check axle/skewer tightness.';
+        prevent = 'Keep spoke tension even, service hubs periodically, and avoid impacts; replace bearings at first sign of play.';
+      }
+
+      // Frame & Fork
+      if (item.type === 'Frame & Fork' || /frame|fork|crack|carbon|structur/.test(t)) {
+        fix = 'Inspect for cracks or damage; small cracks may need professional assessment; replace damaged components when necessary.';
+        prevent = 'Avoid impacts, follow correct torque specs, and inspect regularly for hairline cracks especially after crashes.';
+      }
+
+      // Suspension
+      if (item.type === 'Suspension' || /suspension|shock|damping|rebound/.test(t)) {
+        fix = 'Service seals and fluids, replace worn seals or bushings, and rebuild cartridges or replace components as needed.';
+        prevent = 'Follow service intervals, keep seals clean, and avoid harsh contaminants entering suspension internals.';
+      }
+
+      // Cables & Routing
+      if (item.type === 'Cables & Routing' || /cable|housing|fray|routing/.test(t)) {
+        fix = 'Replace frayed cables and housings, ensure smooth routing, and lubricate where appropriate.';
+        prevent = 'Inspect housings for wear, route cables with gentle curves and secure them to prevent chafing.';
+      }
+
+      // Electronics
+      if (item.type === 'Electronics' || /electronic|battery|sensor|magnet|ebike/.test(t)) {
+        fix = 'Check connections and contacts, replace batteries, and consult device manuals for diagnostics or firmware updates.';
+        prevent = 'Keep connectors clean and dry, maintain batteries charged, and store electronics safely.';
+      }
+
+      // Severity-specific small notes
+      if (item.severity === 'High') {
+        fix = (fix || '') + ' Address promptly — this may require replacement or professional service.';
+      }
+
+      // Add step-by-step expanded guidance for common categories
+      let detailed = '';
+      if (item.type === 'Tire') {
+        detailed = 'Steps: 1) Remove wheel. 2) Inspect tire & rim tape. 3) Remove glass/debris. 4) Patch or replace tube; reinstall and inflate to recommended pressure. Tools: tire levers, pump, patch kit.';
+      } else if (item.type === 'Drivetrain') {
+        detailed = 'Steps: 1) Shift to smallest chainring/cog. 2) Inspect chain for stiff links or damage. 3) Degrease chain and cassette. 4) Lubricate chain sparingly. 5) Replace chain if stretched beyond wear limit. Tools: chain checker, degreaser, lubricant, rags.';
+      } else if (item.type === 'Brakes') {
+        detailed = 'Steps: 1) Inspect pads and rotors. 2) Clean rotor with isopropyl alcohol. 3) Align caliper by loosening mounting bolts and squeezing brake lever, then retighten. 4) Replace pads if under 1–1.5mm. For hydraulics: check fluid level and bleed if spongy. Tools: hex keys, alcohol wipes, bleed kit.';
+      } else if (item.type === 'Wheels & Hubs') {
+        detailed = 'Steps: 1) Spin wheel and look for wobbles. 2) If minor, true the rim with a spoke wrench. 3) Replace broken spokes and re-tension appropriately. 4) Service hub bearings if rough. Tools: spoke wrench, truing stand (or use bike frame), cone wrenches.';
+      }
+
+      return { fix, prevent, detailed };
+    }
+
+          items.forEach(item => {
+            const tips = shortFixAndPrevention(item);
+            const html = `\
+            <div class="accordion-item" id="${item.id}">\
+              <h2 class="accordion-header" id="${item.id}-h">\
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${item.id}-c" aria-expanded="false" aria-controls="${item.id}-c">\
+                  ${item.text} <small class="ms-2 text-muted">[${item.type} • ${item.severity}]</small>\
+                </button>\
+              </h2>\
+              <div id="${item.id}-c" class="accordion-collapse collapse" aria-labelledby="${item.id}-h" data-bs-parent="#generalAccordion">\
+                <div class="accordion-body">\
+                  <p class="mb-1"><strong>Fix:</strong> ${tips.fix}</p>\
+                  <p class="mb-0"><strong>Prevention:</strong> ${tips.prevent}</p>\
+                  ${tips.detailed ? ('<hr><p class="mb-1"><strong>How to fix (detailed):</strong> ' + tips.detailed + '</p>') : ''}\
+                </div>\
+              </div>\
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+          });
+        }
+
+        const categorizeSelect = document.getElementById('categorizeSelect');
+        // animate view change: exit -> render -> enter
+        const generalAccordionEl = document.getElementById('generalAccordion');
+        function animateViewChange(newView) {
+          if (!generalAccordionEl) { renderGeneral(newView); return; }
+          // apply exit
+          generalAccordionEl.classList.add('view-change-anim', 'exit');
+          // force reflow so transition starts
+          // eslint-disable-next-line no-unused-expressions
+          generalAccordionEl.offsetHeight;
+          generalAccordionEl.classList.add('view-change-anim-active');
+          // after exit transition, render and enter
+          setTimeout(() => {
+            generalAccordionEl.classList.remove('exit', 'view-change-anim-active');
+            renderGeneral(newView);
+            // start enter
+            generalAccordionEl.classList.add('enter');
+            // force reflow
+            // eslint-disable-next-line no-unused-expressions
+            generalAccordionEl.offsetHeight;
+            generalAccordionEl.classList.add('view-change-anim-active');
+            // cleanup after enter
+            setTimeout(() => {
+              generalAccordionEl.classList.remove('enter', 'view-change-anim-active', 'view-change-anim');
+            }, 320);
+          }, 320);
+        }
+
+        if (categorizeSelect) {
+          categorizeSelect.addEventListener('change', () => animateViewChange(categorizeSelect.value));
+        }
+        renderGeneral((categorizeSelect && categorizeSelect.value) ? categorizeSelect.value : 'alphabetical');
+
+        // Search for general accordion
+        const generalSearch = document.getElementById('generalSearch');
+        if (generalSearch) {
+          generalSearch.addEventListener('input', () => {
+            const q = generalSearch.value.trim().toLowerCase();
+            document.querySelectorAll('#generalAccordion .accordion-item').forEach(item => {
+              const text = item.textContent.toLowerCase();
+              item.style.display = (!q || text.includes(q)) ? '' : 'none';
+            });
+          });
+        }
+
+  // View all button: expand all items
+  const generalViewAll = document.getElementById('generalViewAll');
+  if (generalViewAll) generalViewAll.addEventListener('click', () => document.querySelectorAll('#generalAccordion .accordion-collapse').forEach(c => new bootstrap.Collapse(c, { show: true }).show()));
+
       })();
     </script>
 <!-- Toast Container -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 3000">
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 3000">
   <div id="toastBox" class="toast align-items-center text-bg-primary border-0 fade" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
       <div class="toast-body" id="toastMessage">
