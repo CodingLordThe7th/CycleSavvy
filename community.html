@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+  <title>Community - CycleSavvy</title>
+  <link rel="shortcut icon" type="image/x-icon" href="compassicon.png">
+
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Force readable text colors per theme: white in dark mode, black in light mode */
+    body.bg-dark { color: #ffffff !important; }
+    body.bg-dark a, body.bg-dark .card, body.bg-dark .card * { color: #ffffff !important; }
+    /* keep muted slightly dimmer but still readable in dark mode */
+    body.bg-dark .text-muted { color: rgba(255,255,255,0.75) !important; }
+
+    /* Ensure headings and nav text inherit correct color in light mode */
+    body:not(.bg-dark) { color: #000000 !important; }
+    body:not(.bg-dark) .text-muted { color: rgba(0,0,0,0.6) !important; }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1 class="mb-4">🫂 Community</h1>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <p class="text-muted">Leaderboard (Top 5)</p>
+        <div id="leaderboardList" class="mb-3"></div>
+
+        <hr />
+        <p class="text-muted">Community features and discussions coming soon.</p>
+
+        <div class="text-center mt-3">
+          <a href="index.html" class="btn btn-secondary">Back to Map</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="Navbar fixed-bottom">
+    <nav id="mainNavbar" class="nav nav-pills flex-column flex-sm-row bg-light">
+      <a class="flex-sm-fill text-sm-center nav-link" href="index.html">Ride Map</a>
+      <a class="flex-sm-fill text-sm-center nav-link" href="bike.html">Bike</a>
+      <a class="flex-sm-fill text-sm-center nav-link" href="settings.html">Settings</a>
+      <a class="flex-sm-fill text-sm-center nav-link active" aria-current="page" href="#">Community</a>
+      <a class="flex-sm-fill text-sm-center nav-link" href="profile.html">Profile</a>
+    </nav>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/localforage@1.9.0/dist/localforage.min.js"></script>
+
+  <!-- CycleSavvy Modules -->
+  <script src="js/utils.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script>try{window.SupabaseConfig && window.SupabaseConfig.initializeSupabase();}catch(e){console.warn('Supabase init failed', e);}</script>
+  <script src="js/auth.js"></script>
+  <script src="js/profile.js"></script>
+
+  <script>
+    // Apply same settings UI behavior as settings.html (dark mode, font-size)
+    const settings = JSON.parse(localStorage.getItem("cycleSavvySettings")) || {};
+
+    const navbar = document.getElementById('mainNavbar');
+
+    function applyDarkMode(enable, animate = false) {
+      if (animate) {
+        document.body.classList.add('theme-transition');
+        setTimeout(() => document.body.classList.remove('theme-transition'), 600);
+      }
+
+      if (enable) {
+        document.body.classList.add('bg-dark', 'text-light');
+        if (navbar) {
+          navbar.classList.remove('bg-light');
+          navbar.classList.add('bg-dark', 'navbar-dark');
+        }
+      } else {
+        document.body.classList.remove('bg-dark', 'text-light');
+        if (navbar) {
+          navbar.classList.remove('bg-dark', 'navbar-dark');
+          navbar.classList.add('bg-light');
+        }
+      }
+    }
+
+    const animateNext = (function () {
+      try {
+        const val = sessionStorage.getItem('themeAnimate');
+        if (val === '1') { sessionStorage.removeItem('themeAnimate'); return true; }
+      } catch (e) {}
+      return false;
+    })();
+
+    applyDarkMode(!!settings.darkMode, animateNext);
+    if (settings && settings.fontSize) {
+      try { document.documentElement.style.setProperty('--app-font-size', settings.fontSize + 'px'); } catch (e) {}
+    }
+  </script>
+
+  <script>
+    // Load leaderboard once profileManager and supabase are ready
+    document.addEventListener('DOMContentLoaded', () => {
+      function tryLoad() {
+        if (window.profileManager && typeof window.profileManager.loadLeaderboard === 'function' && window.profileManager.supabase) {
+          window.profileManager.loadLeaderboard();
+        } else {
+          setTimeout(tryLoad, 150);
+        }
+      }
+      tryLoad();
+    });
+  </script>
+</body>
+</html>

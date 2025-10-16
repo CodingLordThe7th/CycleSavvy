@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  
+  <title>Profile - CycleSavvy</title>
+  <link rel="shortcut icon" type="image/x-icon" href="compassicon.png">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container mt-4">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">Profile</h2>
+            <div id="profileMessage" class="alert alert-info d-none"></div>
+
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <div id="profileEmail" class="form-control-plaintext">Not signed in</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Weight</label>
+              <div class="input-group">
+                <input type="number" id="weightInput" class="form-control" placeholder="e.g. 70" />
+                <select id="weightUnit" class="form-select" style="max-width:110px;">
+                  <option value="kg">kg</option>
+                  <option value="lb">lb</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Goal</label>
+              <select id="goalType" class="form-select mb-2">
+                <option value="none">None</option>
+                <option value="time">Time (minutes)</option>
+                <option value="distance">Distance (meters)</option>
+                <option value="calories">Calories</option>
+              </select>
+              <input type="number" id="goalValue" class="form-control" placeholder="Target value" />
+              <div id="goalHint" class="form-text text-muted mt-1" style="display:none">&nbsp;</div>
+            </div>
+
+            <div class="mb-3 form-check">
+              <input class="form-check-input" type="checkbox" id="showPreloaded" checked>
+              <label class="form-check-label" for="showPreloaded">Show preloaded routes in selector</label>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Upload GPX Route</label>
+              <input type="file" id="uploadRouteInput" accept=".gpx" class="form-control" />
+            </div>
+
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
+            </div>
+
+            <hr />
+            <h5>Saved Routes</h5>
+            <div id="userRoutesList" style="max-height:200px; overflow:auto;"></div>
+
+            <hr />
+            <h5>Leaderboard (Top 5)</h5>
+            <div id="leaderboardList"></div>
+
+            <hr />
+            <div class="d-grid">
+              <button class="btn btn-outline-danger" id="signOutBtn">Sign out</button>
+            </div>
+
+            <div class="text-center mt-3">
+              <a href="index.html" class="btn btn-secondary">Back to Map</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="Navbar fixed-bottom">
+    <nav id="mainNavbar" class="nav nav-pills flex-column flex-sm-row bg-light">
+      <a class="flex-sm-fill text-sm-center nav-link" href="index.html">Ride Map</a>
+      <a class="flex-sm-fill text-sm-center nav-link" href="bike.html">Bike</a>
+      <a class="flex-sm-fill text-sm-center nav-link" href="settings.html">Settings</a>
+      <a class="flex-sm-fill text-sm-center nav-link" href="community.html">Community</a>
+      <a class="flex-sm-fill text-sm-center nav-link active" aria-current="page" href="#">Profile</a>
+    </nav>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/localforage@1.9.0/dist/localforage.min.js"></script>
+  
+  <!-- CycleSavvy Modules -->
+  <script src="js/utils.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/profile.js"></script>
+
+  <!-- Toast Container -->
+  <div class="position-fixed top-0 end-0 p-3" style="z-index: 3000">
+    <div id="toastBox" class="toast align-items-center text-bg-primary border-0 fade" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastMessage">
+          <!-- Message will go here -->
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const settings = JSON.parse(localStorage.getItem("cycleSavvySettings")) || {};
+
+      const navbar = document.getElementById('mainNavbar');
+
+      function applyDarkMode(enable, animate = false) {
+        if (animate) {
+          document.body.classList.add('theme-transition');
+          setTimeout(() => document.body.classList.remove('theme-transition'), 600);
+        }
+        if (enable) {
+          document.body.classList.add('bg-dark', 'text-light');
+          if (navbar) {
+            navbar.classList.remove('bg-light');
+            navbar.classList.add('bg-dark', 'navbar-dark');
+            navbar.querySelectorAll('.nav-link').forEach(link => link.classList.add('text-light'));
+          }
+        } else {
+          document.body.classList.remove('bg-dark', 'text-light');
+          if (navbar) {
+            navbar.classList.remove('bg-dark', 'navbar-dark');
+            navbar.classList.add('bg-light');
+            navbar.querySelectorAll('.nav-link').forEach(link => link.classList.remove('text-light'));
+          }
+        }
+      }
+
+      // If settings request animation (toggle triggered on settings page), animate on load
+      const animateNext = (function () {
+        try {
+          const val = sessionStorage.getItem('themeAnimate');
+          if (val === '1') { sessionStorage.removeItem('themeAnimate'); return true; }
+        } catch (e) {}
+        return false;
+      })();
+
+      applyDarkMode(!!settings.darkMode, animateNext);
+      // Apply saved font size across the app if present
+      if (settings && settings.fontSize) {
+        try { document.documentElement.style.setProperty('--app-font-size', settings.fontSize + 'px'); } catch (e) {}
+      }
+    })();
+  </script>
+</body>
+</html>
