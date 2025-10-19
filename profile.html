@@ -23,6 +23,13 @@
             <div class="mb-3">
               <label class="form-label">Email</label>
               <div id="profileEmail" class="form-control-plaintext">Not signed in</div>
+              <button id="openAuthBtn" class="btn btn-primary btn-sm mt-2" style="display:none;">Sign In</button>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <input type="text" id="usernameInput" class="form-control" placeholder="Enter your username" />
+              <div class="form-text text-muted">This will be displayed on leaderboards and when others search for you.</div>
             </div>
 
             <div class="mb-3">
@@ -67,8 +74,10 @@
             <div id="userRoutesList" style="max-height:200px; overflow:auto;"></div>
 
             <hr />
-            <h5>Leaderboard (Top 5)</h5>
-            <div id="leaderboardList"></div>
+            <h5>Leaderboard Invitations</h5>
+            <div id="invitationsList" style="max-height:200px; overflow:auto;">
+              <div class="text-muted">Loading invitations...</div>
+            </div>
 
             <hr />
             <div class="d-grid">
@@ -101,6 +110,7 @@
   <!-- CycleSavvy Modules -->
   <script src="js/utils.js"></script>
   <script src="js/supabase-config.js"></script>
+  <script>try{window.SupabaseConfig && window.SupabaseConfig.initializeSupabase();}catch(e){console.warn('Supabase init failed', e);}</script>
   <script src="js/auth.js"></script>
   <script src="js/profile.js"></script>
 
@@ -112,6 +122,49 @@
           <!-- Message will go here -->
         </div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase auth UI -->
+  <div class="position-fixed top-50 start-50 translate-middle" id="authCard" style="z-index:3500; display:none; width:320px;">
+    <div class="card shadow">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">Sign In</h6>
+        <button type="button" class="btn-close" id="closeAuth"></button>
+      </div>
+      <div class="card-body">
+        <div id="authForms">
+          <div id="authError" class="alert alert-danger d-none" role="alert"></div>
+          <div id="signupForm">
+            <div class="mb-2">
+              <label class="form-label">Email</label>
+              <input type="email" id="signupEmail" class="form-control" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Password</label>
+              <input type="password" id="signupPassword" class="form-control" />
+            </div>
+            <button class="btn btn-primary w-100 mb-2" id="signupBtn">Sign up</button>
+            <div class="text-center">
+              <a href="#" id="showLogin">Already have an account? Log in</a>
+            </div>
+          </div>
+          <div id="loginForm" style="display:none;">
+            <div class="mb-2">
+              <label class="form-label">Email</label>
+              <input type="email" id="loginEmail" class="form-control" />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Password</label>
+              <input type="password" id="loginPassword" class="form-control" />
+            </div>
+            <button class="btn btn-success w-100 mb-2" id="loginBtn">Log in</button>
+            <div class="text-center">
+              <a href="#" id="showSignup">Don't have an account? Sign up</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

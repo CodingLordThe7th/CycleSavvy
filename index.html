@@ -55,6 +55,9 @@
     </div>
     <button class="btn btn-primary btn-sm" id="fetchBtn" title="Fetch route">Fetch Route</button>
 
+  <!-- Small help button to show GPX install instructions -->
+  <button class="btn btn-outline-secondary btn-sm" id="installGpxBtn" data-bs-toggle="modal" data-bs-target="#gpxInstallModal" title="How to install GPX files">GPX Help</button>
+
 
 </div>
 
@@ -69,13 +72,13 @@
         <label class="form-label" for="routeSelect">Select a Route:</label>
         <select id="routeSelect" class="form-select">
           <option value="" selected disabled>Choose a route</option>
-          <option value="/preloaded_routes/gumbolimbo.gpx">Route 1: Gumbo Limbo</option>
+          <option value="/preloaded_routes/gumbolimbo.gpx">Gumbo Limbo Loop — Coastal Ride</option>
 
-          <option value="/preloaded_routes/ironhorse.gpx">Route 2: Iron Horse Trail</option>
+          <option value="/preloaded_routes/ironhorse.gpx">Iron Horse Trail — Rail-to-Trail</option>
 
-          <option value="/preloaded_routes/laddercanyon.gpx">Route 3: Ladder Canyon</option>
+          <option value="/preloaded_routes/laddercanyon.gpx">Ladder Canyon Out-and-Back — Scenic Climb</option>
 
-          <option value="/preloaded_routes/middleteton.gpx">Route 4: Middle Teton</option>
+          <option value="/preloaded_routes/middleteton.gpx">Middle Teton Traverse — Mountain Route</option>
           <!-- Add more preloaded GPX routes here -->
         </select>
       </div>
@@ -210,3 +213,33 @@
 </div>
 </body>
 </html>
+
+<!-- GPX Install Instructions Modal -->
+<div class="modal fade" id="gpxInstallModal" tabindex="-1" aria-labelledby="gpxInstallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="gpxInstallModalLabel">How to install GPX routes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>This app supports three ways to add GPX routes:</p>
+        <ol>
+          <li><strong>Preloaded routes (hosted web):</strong> Copy GPX files into the <code>preloaded_routes/</code> folder of the project and reference them in <code>index.html</code>. Update <code>service-worker.js</code> if you use offline caching.</li>
+          <li><strong>Upload via Profile:</strong> Sign in, open <em>Profile</em>, and use the <em>Upload GPX Route</em> control. Uploaded routes are stored per-user and will appear under <em>Saved Routes</em>.</li>
+          <li><strong>Native/Capacitor app:</strong> When you package the app natively you can bundle GPX files with the app or let users import from device storage. Use the Filesystem / File Picker APIs in Capacitor for this flow.</li>
+        </ol>
+        <p>Quick tips:</p>
+        <ul>
+          <li>Use readable filenames like <code>iron_horse_trail.gpx</code> (lowercase, underscores).</li>
+          <li>If the route doesn't appear, check the browser Console (Network) and ensure the file path matches exactly.</li>
+          <li>To make uploaded routes searchable or sortable, compute and store metadata (length, bounding box) on upload.</li>
+        </ul>
+        <p>See the full instructions and commands in the repo: <a href="README_GPX_INSTALL.md" target="_blank">README_GPX_INSTALL.md</a></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

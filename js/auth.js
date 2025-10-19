@@ -5,6 +5,12 @@ class AuthManager {
     this.init();
   }
 
+  async getSession() {
+    if (!this.supabase) return null;
+    const { data: { session } } = await this.supabase.auth.getSession();
+    return session;
+  }
+
   init() {
     // Wait for Supabase to be available
     const checkSupabase = () => {

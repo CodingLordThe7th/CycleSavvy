@@ -46,28 +46,85 @@ class RideTracker {
     this.rideStartTime = new Date().toISOString();
     
     if (navigator.geolocation) {
-      this.watchId = navigator.geolocation.watchPosition(
+      // Define geolocation options for better accuracy and reliability
+      const geoOptions = {
+        enableHighAccuracy: true,  // Use GPS if available
+        maximumAge: 1000,         // Accept cached positions up to 1 second old
+        timeout: 5000             // Wait up to 5 seconds for a position
+      };
+
+      // Try to get an initial position first
+      navigator.geolocation.getCurrentPosition(
         (position) => {
-          const latlng = [position.coords.latitude, position.coords.longitude];
+          // Start continuous watching only after getting initial position
+          this.watchId = navigator.geolocation.watchPosition(
+            (position) => {
+              const latlng = [position.coords.latitude, position.coords.longitude];
+              
+              // Only update if accuracy is good enough (< 100 meters)
+              if (position.coords.accuracy > 100) {
+                console.warn("Low accuracy position, skipping update:", position.coords.accuracy);
+                return;
+              }
 
-          if (this.ridePolyline) window.mapManager.map.removeLayer(this.ridePolyline);
-          if (this.currentMarker) window.mapManager.map.removeLayer(this.currentMarker);
+              if (this.ridePolyline) window.mapManager.map.removeLayer(this.ridePolyline);
+              if (this.currentMarker) window.mapManager.map.removeLayer(this.currentMarker);
 
-          this.currentMarker = L.marker(latlng).addTo(window.mapManager.map);
-          this.ridecoord.push(latlng);
+              this.currentMarker = L.marker(latlng).addTo(window.mapManager.map);
+              this.ridecoord.push(latlng);
 
-          if (!this.ridePolyline) {
-            this.ridePolyline = L.polyline(this.ridecoord, { color: "blue" }).addTo(window.mapManager.map);
-          } else {
-            this.ridePolyline.setLatLngs(this.ridecoord);
-          }
+              if (!this.ridePolyline) {
+                this.ridePolyline = L.polyline(this.ridecoord, { color: "blue" }).addTo(window.mapManager.map);
+              } else {
+                this.ridePolyline.setLatLngs(this.ridecoord);
+              }
 
-          window.mapManager.map.panTo(latlng);
+              window.mapManager.map.panTo(latlng);
+            },
+            (error) => {
+              let errorMsg = "Error getting location: ";
+              switch(error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMsg += "Please enable location permissions for this site.";
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMsg += "Please check your GPS is enabled and you have a clear view of the sky.";
+                  break;
+                case error.TIMEOUT:
+                  errorMsg += "Position request timed out. Please try again.";
+                  break;
+                default:
+                  errorMsg += error.message;
+              }
+              console.warn(errorMsg);
+              showToast(errorMsg, "warning");
+            },
+            geoOptions
+          );
         },
         (error) => {
-          console.error("Error getting location: ", error);
-          showToast("Error getting location: " + error.message, "danger");
-        }
+          let errorMsg = "Error getting initial position: ";
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMsg += "Please enable location permissions for this site.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMsg += "Please check your GPS is enabled and you have a clear view of the sky.";
+              break;
+            case error.TIMEOUT:
+              errorMsg += "Position request timed out. Please try again.";
+              break;
+            default:
+              errorMsg += error.message;
+          }
+          console.warn(errorMsg);
+          showToast(errorMsg, "warning");
+          // Reset UI since tracking couldn't start
+          document.getElementById("start").disabled = false;
+          document.getElementById("stop").disabled = true;
+          this.rideStartTime = null;
+        },
+        geoOptions
       );
 
       document.getElementById("start").disabled = true;

@@ -1,0 +1,67 @@
+Intro
+Hi, I’m going to walk you through CycleSavvy — what it does, how it works, and the main features you can demo.
+
+1) What CycleSavvy is
+- CycleSavvy is a simple client-side web app for planning, tracking, and sharing bike rides.
+- It uses Leaflet for maps, Supabase for authentication and server-side persistence, and a small set of modules that handle profiles, routes, rides and goals.
+
+2) High-level architecture
+- UI: static HTML pages (index.html, profile.html, settings.html) styled with Bootstrap.
+- Map: Leaflet + leaflet-gpx for loading and displaying GPX route files.
+- Auth & backend: Supabase for user authentication, storing profiles, routes, and ride records.
+- Local storage: lightweight localForage is used for ephemeral route saving; persistent per-user data like goals and profiles is stored in Supabase.
+
+3) Main modules and responsibilities
+- js/supabase-config.js
+  - Initializes a Supabase client used across the app.
+- js/auth.js
+  - Manages signup/login, sign-out, and provides helper methods `getCurrentUser()` and `signOut()`.
+  - Emits auth state changes which other modules listen to.
+- js/profile.js
+  - Manages the profile page: displays email, weight, preloaded route preference, saved GPX uploads, and the Goals UI.
+  - Goals are stored inside the `profiles.profile` JSON column in Supabase, under `profile.goals`.
+  - Supports adding goals (title, recurrence, type, target), deleting goals, manual +1 increments, progress bars, streaks, and awarding points on completion.
+- js/map-manager.js
+  - Loads GPX routes (preloaded and user-uploaded), displays them on the map, and creates markers/labels.
+- js/ride-tracker.js
+  - Tracks live GPS while riding, builds a polyline and computes distances/durations.
+  - Saves rides (locally via localForage and to Supabase) and computes points and calories estimates.
+  - Points are recorded on the ride and the user's `profiles.cumulative_score` is updated.
+
+4) Feature walkthrough / demo script
+- Start at the map (index.html). You can load preloaded routes from the examples or upload a GPX on the profile page and then load it.
+- Sign up or log in. The app uses Supabase for auth; when you sign in, your email appears on the Profile page.
+- Profile page:
+  - Edit weight (used to estimate calories).
+  - Toggle whether to show preloaded routes in selectors.
+  - Upload GPX files to your Supabase storage and they’ll appear under "Saved Routes". Click Load to show them on the map.
+  - Goals:
+    - Add a goal: enter a title, recurrence (daily/weekly/monthly), unit type (time in minutes, distance in meters, calories), and target value, then click Add.
+    - The goals list shows progress bars, streak counts, and buttons to manually increment or delete.
+    - Goals are persisted to Supabase in your profile record.
+- Tracking a ride:
+  - On the map, click Start to begin tracking. The app uses device geolocation to record a path.
+  - Click Stop when finished. The ride is stored locally and sent to Supabase (if signed in). The app computes points based on goals or distance.
+- Leaderboard:
+  - The profile page shows a Top-5 leaderboard based on cumulative_score using a server-side RPC (`leaderboard_top5`).
+
+5) Where data lives
+- Supabase tables used:
+  - profiles: stores `profile` JSON (with goals, weight, etc.) and `cumulative_score`.
+  - user_routes: metadata about uploaded GPX files (path, public URL) stored in Supabase storage.
+  - rides: each ride record stores coordinates, meta (start/end, duration, calories), and awarded points.
+- Files (GPX) are stored in Supabase storage under the `gpx` bucket and referenced by `user_routes`.
+
+6) Extensibility notes / next steps
+- Automatically credit goals when a ride completes (ride-tracker should call profileManager.creditGoal()).
+- Add timers per-goal (start/pause/resume) and persist timer state to Supabase.
+- Add recurrence resets that run server-side or by a scheduled worker to reset daily/weekly/monthly goals.
+- Add route discovery: index the GPX routes by length/area and allow filtering and search.
+
+7) Troubleshooting & developer notes
+- If sign-in isn't updating the UI, ensure `js/supabase-config.js` is loaded before `js/auth.js` and `js/profile.js`.
+- If goals aren't appearing, check that `profiles.profile.goals` contains an array using Supabase console.
+- Logs are sent to the browser console; global helpers `notify()` and `showToast()` provide UI feedback.
+
+Conclusion
+- That's the overview and demo script for CycleSavvy. If you'd like, I can produce a shorter 60-second elevator pitch or expand any section into a slide-ready paragraph.

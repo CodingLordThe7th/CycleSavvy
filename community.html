@@ -28,12 +28,50 @@
 
     <div class="card mb-3">
       <div class="card-body">
-        <p class="text-muted">Leaderboard (Top 5)</p>
-        <div id="leaderboardList" class="mb-3"></div>
+        <h5>Global Leaderboard</h5>
+        <p class="text-muted">Top riders by total points</p>
+        <button id="refreshLeaderboardBtn" class="btn btn-sm btn-outline-secondary mb-2">Refresh</button>
+        <div id="globalLeaderboardList" class="mb-3"></div>
+        
+        <hr />
+        
+        <h5>Custom Leaderboards</h5>
+        <p class="text-muted">Leaderboards created by users</p>
+        
+        <div class="mb-3">
+          <button id="createLeaderboardBtn" class="btn btn-primary btn-sm">Create Leaderboard</button>
+        </div>
+        
+        <div id="createLeaderboardForm" class="mb-3" style="display:none;">
+          <div class="mb-2">
+            <input id="leaderboardNameInput" class="form-control mb-2" placeholder="Leaderboard name" />
+            <select id="leaderboardGoalType" class="form-select mb-2">
+              <option value="total_distance">Total Distance (meters)</option>
+              <option value="total_time">Total Time (minutes)</option>
+              <option value="total_calories">Total Calories</option>
+              <option value="total_points">Total Points</option>
+            </select>
+            <input id="leaderboardGoalValue" class="form-control mb-2" placeholder="Goal value (optional)" type="number" />
+            <div class="d-flex gap-2">
+              <button id="leaderboardCreateSubmit" class="btn btn-success">Create</button>
+              <button id="leaderboardCreateCancel" class="btn btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </div>
+        
+        <div id="customLeaderboardsList" class="mb-3"></div>
+        
+        <div id="inviteSection" style="display:none;">
+          <hr />
+          <h6>Invite Users</h6>
+          <input id="searchUserInput" class="form-control mb-2" placeholder="Search users by username or email" />
+          <div id="searchResults" style="max-height:200px; overflow:auto;"></div>
+          <div id="selectedLeaderboardInfo" class="text-muted small mt-2"></div>
+        </div>
+        
+        <div id="leaderboardMembers" style="max-height:300px; overflow:auto;"></div>
 
         <hr />
-        <p class="text-muted">Community features and discussions coming soon.</p>
-
         <div class="text-center mt-3">
           <a href="index.html" class="btn btn-secondary">Back to Map</a>
         </div>
@@ -61,6 +99,7 @@
   <script>try{window.SupabaseConfig && window.SupabaseConfig.initializeSupabase();}catch(e){console.warn('Supabase init failed', e);}</script>
   <script src="js/auth.js"></script>
   <script src="js/profile.js"></script>
+  <script src="js/community.js"></script>
 
   <script>
     // Apply same settings UI behavior as settings.html (dark mode, font-size)
@@ -104,16 +143,37 @@
   </script>
 
   <script>
-    // Load leaderboard once profileManager and supabase are ready
+    // Load leaderboards once managers are ready
     document.addEventListener('DOMContentLoaded', () => {
       function tryLoad() {
-        if (window.profileManager && typeof window.profileManager.loadLeaderboard === 'function' && window.profileManager.supabase) {
-          window.profileManager.loadLeaderboard();
+        if (window.profileManager && typeof window.profileManager.loadGlobalLeaderboard === 'function' && window.profileManager.supabase) {
+          window.profileManager.loadGlobalLeaderboard();
         } else {
           setTimeout(tryLoad, 150);
         }
       }
       tryLoad();
+      
+      // Fallback: try loading leaderboard after a delay
+      setTimeout(() => {
+        console.log('Fallback: trying to load leaderboard after delay');
+        if (window.profileManager && window.profileManager.loadGlobalLeaderboard) {
+          window.profileManager.loadGlobalLeaderboard();
+        }
+      }, 3000);
+      
+      // Add refresh button functionality
+      const refreshBtn = document.getElementById('refreshLeaderboardBtn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          console.log('Refresh leaderboard clicked');
+          if (window.profileManager && window.profileManager.loadGlobalLeaderboard) {
+            window.profileManager.loadGlobalLeaderboard();
+          } else {
+            console.log('ProfileManager not ready');
+          }
+        });
+      }
     });
   </script>
 </body>
