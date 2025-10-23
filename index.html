@@ -61,6 +61,41 @@
 
 </div>
 
+      <!-- Trail progress and controls -->
+      <!-- Trail progress and controls -->
+      <div id="trailControls" class="mt-2" style="display: none;">
+        <div class="d-flex align-items-center gap-2">
+          <div class="flex-fill d-flex align-items-center gap-2">
+            <div class="flex-fill">
+              <div class="progress" style="height:14px;">
+                <div id="trailProgressBar" class="progress-bar" role="progressbar" style="width:0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </div>
+            <div style="min-width:48px; text-align:right;" aria-hidden="true"><span id="trailProgressPercent">0%</span></div>
+          </div>
+          <button class="btn btn-warning btn-sm" id="endTrailBtn" title="End trail and claim partial credit">End Trail</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Route Loaded Modal -->
+  <div class="modal fade" id="routeLoadedModal" tabindex="-1" aria-labelledby="routeLoadedModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title" id="routeLoadedModalLabel">Route Ready</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center py-3">
+          <p id="routeLoadedText" class="mb-3">Route is loaded and ready. What would you like to do?</p>
+          <div class="d-grid gap-2">
+            <button type="button" class="btn btn-primary" id="routeLoadedStartBtn">Start Tracing Route</button>
+            <button type="button" class="btn btn-outline-danger" id="routeLoadedExitBtn">Exit Route</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -72,14 +107,23 @@
         <label class="form-label" for="routeSelect">Select a Route:</label>
         <select id="routeSelect" class="form-select">
           <option value="" selected disabled>Choose a route</option>
-          <option value="/preloaded_routes/gumbolimbo.gpx">Gumbo Limbo Loop — Coastal Ride</option>
-
-          <option value="/preloaded_routes/ironhorse.gpx">Iron Horse Trail — Rail-to-Trail</option>
-
-          <option value="/preloaded_routes/laddercanyon.gpx">Ladder Canyon Out-and-Back — Scenic Climb</option>
-
-          <option value="/preloaded_routes/middleteton.gpx">Middle Teton Traverse — Mountain Route</option>
-          <!-- Add more preloaded GPX routes here -->
+          <option value="preloaded_routes/artistpoint.gpx">Artist Point Loop</option>
+          <option value="preloaded_routes/christianityspireloop.gpx">Christianity Spire Loop</option>
+          <option value="preloaded_routes/coloradoriverloop.gpx">Colorado River Loop</option>
+          <option value="preloaded_routes/crescentglacierloop.gpx">Crescent Glacier Loop</option>
+          <option value="preloaded_routes/Dark Angel via Devils Garden Loop.gpx">Dark Angel via Devils Garden Loop</option>
+          <option value="preloaded_routes/Doughty Falls Viewpoint Loop.gpx">Doughty Falls Viewpoint Loop</option>
+          <option value="preloaded_routes/gumbolimbo.gpx">Gumbo Limbo Loop — Coastal Ride</option>
+          <option value="preloaded_routes/ironhorse.gpx">Iron Horse Trail — Rail-to-Trail</option>
+          <option value="preloaded_routes/laddercanyon.gpx">Ladder Canyon Out-and-Back — Scenic Climb</option>
+          <option value="preloaded_routes/Melakwa Lake via Denny Creek Trail.gpx">Melakwa Lake via Denny Creek Trail</option>
+          <option value="preloaded_routes/middleteton.gpx">Middle Teton Traverse — Mountain Route</option>
+          <option value="preloaded_routes/Pleasanton-Ridge.gpx">Pleasanton Ridge Loop</option>
+          <option value="preloaded_routes/Quandary Peak - East ridge PR-014.gpx">Quandary Peak — East Ridge</option>
+          <option value="preloaded_routes/schoolroute.gpx">School Route — Urban Commute</option>
+          <option value="preloaded_routes/Tahoe Rim Trail_ a Trail Like No Other via Tamarack Lake Trail and Tahoe Rim Trail.gpx">Tahoe Rim Trail — Tamarack Lake Loop</option>
+          <option value="preloaded_routes/Washington State Ski & Snowboard Museum Loop via Pacific Crest Tral Access and Old Commonwealth Trai.gpx">Washington State Ski & Snowboard Museum Loop — PCT / Old Commonwealth Trail</option>
+          <!-- All preloaded GPX routes have been added above -->
         </select>
       </div>
       <button class="btn btn-primary mt-2" id="loadRoute">Load Route</button>
@@ -208,6 +252,25 @@
         <!-- Message will go here -->
       </div>
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Join Trail Modal -->
+<div class="modal fade" id="joinTrailModal" tabindex="-1" aria-labelledby="joinTrailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header py-2">
+        <h5 class="modal-title" id="joinTrailModalLabel">Join Trail?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center py-3">
+        <p class="mb-0" id="joinTrailText">You're close to the trail endpoint. Would you like to join this trail?</p>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-outline-secondary" id="joinTrailCancel" data-bs-dismiss="modal">No thanks</button>
+        <button type="button" class="btn btn-primary" id="joinTrailConfirm">Join Trail</button>
+      </div>
     </div>
   </div>
 </div>

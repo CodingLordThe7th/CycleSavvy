@@ -463,6 +463,56 @@ class ProfileManager {
     }
   }
 
+  showRenameModal(routeId, currentName) {
+    const modal = document.getElementById('renameRouteModal');
+    const nameInput = document.getElementById('newRouteName');
+    const routeIdInput = document.getElementById('renameRouteId');
+    const saveBtn = document.getElementById('saveRouteNameBtn');
+
+    if (!modal || !nameInput || !routeIdInput || !saveBtn) return;
+
+    // Set up the modal
+    nameInput.value = currentName;
+    routeIdInput.value = routeId;
+
+    // Show the modal
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+
+    // Handle save button click
+    const saveHandler = async () => {
+      const newName = nameInput.value.trim();
+      if (!newName) return;
+
+      try {
+        const { error } = await this.supabase
+          .from('user_routes')
+          .update({ name: newName })
+          .eq('id', routeId);
+
+        if (error) throw error;
+
+        notify('Route renamed successfully', 'success');
+        bsModal.hide();
+        this.loadUserRoutes(); // Refresh the list
+      } catch (err) {
+        console.error('Rename route failed', err);
+        notify('Failed to rename route', 'danger');
+      }
+
+      // Clean up
+      saveBtn.removeEventListener('click', saveHandler);
+    };
+
+    // Add save button handler
+    saveBtn.addEventListener('click', saveHandler);
+
+    // Clean up when modal is hidden
+    modal.addEventListener('hidden.bs.modal', () => {
+      saveBtn.removeEventListener('click', saveHandler);
+    }, { once: true });
+  }
+
   toggleProfileFields(show) {
     const fields = [
       'usernameInput',
@@ -495,41 +545,56 @@ class ProfileManager {
 
   async loadUserRoutes() {
     const userRoutesList = document.getElementById('userRoutesList');
-    if (!userRoutesList) return;
+    if (!userRoutesList || !this.supabase) return;
     
     userRoutesList.innerHTML = '';
-    if (!this.supabase) return;
-    
-    const user = await window.authManager.getCurrentUser();
-    if (!user) return;
     
     try {
-      const { data } = await this.supabase.from('user_routes')
+      const user = await window.authManager.getCurrentUser();
+      if (!user) return;
+      
+      const { data: routes, error } = await this.supabase
+        .from('user_routes')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
         
-      if (!data || data.length === 0) { 
-        userRoutesList.innerHTML = '<div class="text-muted">No saved routes</div>'; 
-        return; 
+      if (error) throw error;
+      
+      if (!routes || routes.length === 0) {
+        userRoutesList.innerHTML = '<div class="text-muted">No saved routes</div>';
+        return;
       }
       
-      data.forEach(r => {
+      for (const route of routes) {
         const div = document.createElement('div');
-        div.className = 'd-flex justify-content-between align-items-center border-bottom py-1';
-        div.innerHTML = `<div class="small">${r.name}</div><div><button class="btn btn-sm btn-link" data-path="${r.path}">Load</button></div>`;
+        div.className = 'd-flex justify-content-between align-items-center border-bottom py-2';
+        div.innerHTML = `
+          <div class="text-truncate me-2">${route.name}</div>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary btn-sm" title="Rename route" data-route-id="${route.id}" data-route-name="${route.name}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+              </svg>
+            </button>
+          </div>
+        `;
+        
         userRoutesList.appendChild(div);
         
-        div.querySelector('button').addEventListener('click', () => {
-          const publicUrl = `${window.SupabaseConfig.SUPABASE_URL}/storage/v1/object/public/gpx/${encodeURIComponent(r.path)}`;
-          window.mapManager.loadGPXRoute(publicUrl);
-        });
-      });
-    } catch (err) { 
-      console.error('Failed to load user routes', err); 
+        // Add rename button click handler
+        const renameBtn = div.querySelector('[data-route-id]');
+        if (renameBtn) {
+          renameBtn.addEventListener('click', () => this.showRenameModal(route.id, route.name));
+        }
+      }
+    } catch (err) {
+      console.error('Load user routes failed', err);
+      userRoutesList.innerHTML = '<div class="text-muted">Error loading routes</div>';
     }
   }
-
+  
   async initializeCumulativeScores() {
     try {
       // Get all profiles and check which ones need cumulative_score initialized

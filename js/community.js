@@ -43,8 +43,6 @@ class CommunityManager {
     const submit = document.getElementById('leaderboardCreateSubmit');
     const cancel = document.getElementById('leaderboardCreateCancel');
     const nameInput = document.getElementById('leaderboardNameInput');
-    const goalTypeSelect = document.getElementById('leaderboardGoalType');
-    const goalValueInput = document.getElementById('leaderboardGoalValue');
     const searchInput = document.getElementById('searchUserInput');
 
     if (createBtn) {
@@ -60,23 +58,17 @@ class CommunityManager {
       cancel.addEventListener('click', () => {
         form.style.display = 'none';
         nameInput.value = '';
-        goalValueInput.value = '';
-        goalTypeSelect.value = 'total_distance';
       });
     }
 
     if (submit) {
       submit.addEventListener('click', async () => {
         const name = nameInput.value && nameInput.value.trim();
-        const goalType = goalTypeSelect.value;
-        const goalValue = goalValueInput.value ? Number(goalValueInput.value) : null;
         
         if (!name) return alert('Enter a leaderboard name');
         
-        await this.createLeaderboard(name, goalType, goalValue);
+        await this.createLeaderboard(name);
         nameInput.value = '';
-        goalValueInput.value = '';
-        goalTypeSelect.value = 'total_distance';
         form.style.display = 'none';
         this.loadCustomLeaderboards();
       });
@@ -124,7 +116,7 @@ class CommunityManager {
 
 
 
-  async createLeaderboard(name, goalType, goalValue) {
+  async createLeaderboard(name) {
     if (!this.supabase) return alert('Auth not ready');
     const user = await window.authManager.getCurrentUser();
     if (!user) return alert('Sign in first');
@@ -138,16 +130,10 @@ class CommunityManager {
     }
 
     try {
-      const goal = {
-        type: goalType,
-        value: goalValue
-      };
-
       const { data, error } = await this.supabase
         .from('leaderboards')
         .insert({ 
-          name, 
-          goal, 
+          name,
           created_by: user.id 
         })
         .select()
@@ -202,10 +188,6 @@ class CommunityManager {
         const div = document.createElement('div');
         div.className = 'd-flex justify-content-between align-items-center py-2 border-bottom';
         
-        const goalText = lb.goal ? 
-          `${lb.goal.type.replace('_', ' ')}${lb.goal.value ? ` (${lb.goal.value})` : ''}` : 
-          'No goal set';
-        
         const isCreator = lb.created_by === user.id;
         
         // Different buttons based on whether user is creator
@@ -217,7 +199,6 @@ class CommunityManager {
         div.innerHTML = `
           <div>
             <div class="fw-bold">${lb.name} ${isCreator ? '<span class="badge bg-primary ms-1">Your Leaderboard</span>' : ''}</div>
-            <div class="text-muted small">Goal: ${goalText}</div>
           </div>
           <div>
             ${buttonsHtml}

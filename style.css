@@ -15,6 +15,24 @@ html, body {
   width: 100%;
 }
 
+/* Modal z-index handling */
+/* Hide modal backdrop completely */
+.modal-backdrop {
+  display: none !important;
+}
+
+/* Ensure join trail modal content is on top */
+#joinTrailModal .modal-content {
+  position: relative;
+  z-index: 3750;  /* Above the modal itself */
+}
+
+/* Ensure buttons in join trail modal are clickable */
+#joinTrailModal .modal-footer button {
+  position: relative;
+  z-index: 3800;  /* Above modal content */
+}
+
 /* Navbar container adjustments */
 .Navbar {
   height: auto; /* navbar sets its own height */

@@ -73,6 +73,20 @@ class RideTracker {
               this.currentMarker = L.marker(latlng).addTo(window.mapManager.map);
               this.ridecoord.push(latlng);
 
+              // Always check for nearby routes, even if not tracking
+              try {
+                if (window.mapManager && window.mapManager.currentRoutePolylines?.length > 0) {
+                  window.mapManager.processPosition(latlng);
+                }
+              } catch (e) { console.warn('Route proximity check error', e); }
+
+              // Notify mapManager of the new position for auto-join/tracing
+              try {
+                if (window.mapManager && typeof window.mapManager.processPosition === 'function') {
+                  window.mapManager.processPosition(latlng);
+                }
+              } catch (e) { console.warn('mapManager.processPosition error', e); }
+
               if (!this.ridePolyline) {
                 this.ridePolyline = L.polyline(this.ridecoord, { color: "blue" }).addTo(window.mapManager.map);
               } else {

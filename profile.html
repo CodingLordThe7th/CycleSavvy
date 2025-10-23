@@ -73,6 +73,29 @@
             <h5>Saved Routes</h5>
             <div id="userRoutesList" style="max-height:200px; overflow:auto;"></div>
 
+            <!-- Route Rename Modal -->
+            <div class="modal fade" id="renameRouteModal" tabindex="-1" aria-labelledby="renameRouteModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-sm modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header py-2">
+                    <h5 class="modal-title" id="renameRouteModalLabel">Rename Route</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <input type="hidden" id="renameRouteId">
+                    <div class="mb-3">
+                      <label for="newRouteName" class="form-label">New Name</label>
+                      <input type="text" class="form-control" id="newRouteName" placeholder="Enter new route name">
+                    </div>
+                  </div>
+                  <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveRouteNameBtn">Save</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <hr />
             <h5>Leaderboard Invitations</h5>
             <div id="invitationsList" style="max-height:200px; overflow:auto;">
