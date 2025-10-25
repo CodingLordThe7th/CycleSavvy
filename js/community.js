@@ -37,6 +37,82 @@ class CommunityManager {
     }
   }
 
+  showRenameModal(leaderboardId, currentName) {
+    const modal = new bootstrap.Modal(document.getElementById('renameLeaderboardModal'));
+    const input = document.getElementById('renameLeaderboardInput');
+    const idInput = document.getElementById('renameLeaderboardId');
+    
+    input.value = currentName;
+    idInput.value = leaderboardId;
+    
+    // Set up confirm button handler if not already set
+    const confirmBtn = document.getElementById('confirmRenameBtn');
+    if (!confirmBtn.hasEventListener) {
+      confirmBtn.hasEventListener = true;
+      confirmBtn.addEventListener('click', () => this.renameLeaderboard());
+    }
+    
+    modal.show();
+  }
+
+  async renameLeaderboard() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('renameLeaderboardModal'));
+    const input = document.getElementById('renameLeaderboardInput');
+    const idInput = document.getElementById('renameLeaderboardId');
+    
+    const newName = input.value.trim();
+    const leaderboardId = idInput.value;
+    
+    if (!newName) {
+      alert('Please enter a name');
+      return;
+    }
+    
+    try {
+      const { error } = await this.supabase
+        .from('leaderboards')
+        .update({ name: newName })
+        .eq('id', leaderboardId);
+        
+      if (error) throw error;
+      
+      modal.hide();
+      this.loadCustomLeaderboards();
+      notify('Leaderboard renamed successfully!', 'success');
+    } catch (err) {
+      console.error('Rename leaderboard failed', err);
+      notify('Failed to rename leaderboard: ' + (err.message || 'Unknown error'), 'danger');
+    }
+  }
+
+  async deleteLeaderboard(leaderboardId, name) {
+    if (!confirm(`Are you sure you want to delete the leaderboard "${name}"? This cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      // First delete members to maintain referential integrity
+      await this.supabase
+        .from('leaderboard_members')
+        .delete()
+        .eq('leaderboard_id', leaderboardId);
+        
+      // Then delete the leaderboard itself
+      const { error } = await this.supabase
+        .from('leaderboards')
+        .delete()
+        .eq('id', leaderboardId);
+        
+      if (error) throw error;
+      
+      this.loadCustomLeaderboards();
+      notify('Leaderboard deleted successfully!', 'success');
+    } catch (err) {
+      console.error('Delete leaderboard failed', err);
+      notify('Failed to delete leaderboard: ' + (err.message || 'Unknown error'), 'danger');
+    }
+  }
+
   setupUI() {
     const createBtn = document.getElementById('createLeaderboardBtn');
     const form = document.getElementById('createLeaderboardForm');
@@ -192,9 +268,11 @@ class CommunityManager {
         
         // Different buttons based on whether user is creator
         const buttonsHtml = isCreator ? 
-          `<button class="btn btn-sm btn-outline-primary me-1" data-id="${lb.id}" data-action="view">View</button>
-           <button class="btn btn-sm btn-outline-success" data-id="${lb.id}" data-action="invite">Invite</button>` :
-          `<button class="btn btn-sm btn-outline-primary" data-id="${lb.id}" data-action="view">View Only</button>`;
+          `<button class="btn btn-sm btn-outline-primary me-1" data-id="${lb.id}" data-action="view" title="View"><i class="bi bi-eye"></i></button>
+           <button class="btn btn-sm btn-outline-success me-1" data-id="${lb.id}" data-action="invite" title="Invite Members"><i class="bi bi-person-plus"></i></button>
+           <button class="btn btn-sm btn-outline-secondary me-1" data-id="${lb.id}" data-action="rename" title="Rename Leaderboard"><i class="bi bi-pencil"></i></button>
+           <button class="btn btn-sm btn-outline-danger" data-id="${lb.id}" data-action="delete" title="Delete Leaderboard"><i class="bi bi-trash"></i></button>` :
+          `<button class="btn btn-sm btn-outline-primary" data-id="${lb.id}" data-action="view" title="View"><i class="bi bi-eye"></i></button>`;
         
         div.innerHTML = `
           <div>
@@ -216,11 +294,23 @@ class CommunityManager {
           this.showMembers(lb.id, lb.name);
         });
         
-        // Only add invite listener if user is creator
-        const inviteBtn = div.querySelector('[data-action="invite"]');
-        if (inviteBtn) {
-          inviteBtn.addEventListener('click', () => 
-            this.showInviteSection(lb.id, lb.name));
+        // Only add creator-specific listeners if user is creator
+        if (isCreator) {
+          const inviteBtn = div.querySelector('[data-action="invite"]');
+          if (inviteBtn) {
+            inviteBtn.addEventListener('click', () => 
+              this.showInviteSection(lb.id, lb.name));
+          }
+
+          const renameBtn = div.querySelector('[data-action="rename"]');
+          if (renameBtn) {
+            renameBtn.addEventListener('click', () => this.showRenameModal(lb.id, lb.name));
+          }
+
+          const deleteBtn = div.querySelector('[data-action="delete"]');
+          if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => this.deleteLeaderboard(lb.id, lb.name));
+          }
         }
       });
     } catch (err) { 
@@ -231,9 +321,10 @@ class CommunityManager {
 
   async showMembers(leaderboardId, leaderboardName) {
     const container = document.getElementById('leaderboardMembers');
+    const isDarkMode = document.body.classList.contains('bg-dark');
     container.style.display = 'block';
     container.innerHTML = `
-      <div class="mt-3 p-2 bg-light rounded">
+      <div class="mt-3 p-2 rounded ${isDarkMode ? 'bg-dark' : 'bg-light'}">
         <h6 class="border-bottom pb-2 mb-3">${leaderboardName} - Members</h6>
         <div id="membersList">Loading...</div>
       </div>`;

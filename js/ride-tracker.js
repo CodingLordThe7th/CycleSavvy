@@ -49,8 +49,8 @@ class RideTracker {
       // Define geolocation options for better accuracy and reliability
       const geoOptions = {
         enableHighAccuracy: true,  // Use GPS if available
-        maximumAge: 1000,         // Accept cached positions up to 1 second old
-        timeout: 5000             // Wait up to 5 seconds for a position
+        maximumAge: 500,          // Accept cached positions up to 0.5 seconds old
+        timeout: 2000             // Wait up to 2 seconds for a position
       };
 
       // Try to get an initial position first
@@ -61,8 +61,8 @@ class RideTracker {
             (position) => {
               const latlng = [position.coords.latitude, position.coords.longitude];
               
-              // Only update if accuracy is good enough (< 100 meters)
-              if (position.coords.accuracy > 100) {
+              // Only update if accuracy is reasonable (< 150 meters)
+              if (position.coords.accuracy > 150) {
                 console.warn("Low accuracy position, skipping update:", position.coords.accuracy);
                 return;
               }
@@ -73,19 +73,12 @@ class RideTracker {
               this.currentMarker = L.marker(latlng).addTo(window.mapManager.map);
               this.ridecoord.push(latlng);
 
-              // Always check for nearby routes, even if not tracking
-              try {
-                if (window.mapManager && window.mapManager.currentRoutePolylines?.length > 0) {
-                  window.mapManager.processPosition(latlng);
-                }
-              } catch (e) { console.warn('Route proximity check error', e); }
-
-              // Notify mapManager of the new position for auto-join/tracing
+              // Check for nearby routes once per position update
               try {
                 if (window.mapManager && typeof window.mapManager.processPosition === 'function') {
                   window.mapManager.processPosition(latlng);
                 }
-              } catch (e) { console.warn('mapManager.processPosition error', e); }
+              } catch (e) { console.warn('Route proximity check error', e); }
 
               if (!this.ridePolyline) {
                 this.ridePolyline = L.polyline(this.ridecoord, { color: "blue" }).addTo(window.mapManager.map);

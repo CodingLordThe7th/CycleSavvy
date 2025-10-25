@@ -479,37 +479,68 @@ class ProfileManager {
     const bsModal = new bootstrap.Modal(modal);
     bsModal.show();
 
+    // Remove any existing click handlers
+    const oldHandler = saveBtn.getAttribute('data-save-handler');
+    if (oldHandler) {
+      saveBtn.removeEventListener('click', window[oldHandler]);
+    }
+
     // Handle save button click
     const saveHandler = async () => {
       const newName = nameInput.value.trim();
+      console.log('rename saveHandler invoked', { routeId, newName });
       if (!newName) return;
 
       try {
-        const { error } = await this.supabase
+        saveBtn.disabled = true; // Prevent double-clicks
+
+        // Ensure we only update routes owned by the current user (helps with RLS)
+        const user = await window.authManager.getCurrentUser();
+        if (!user) {
+          throw new Error('Not authenticated');
+        }
+
+        const result = await this.supabase
           .from('user_routes')
           .update({ name: newName })
-          .eq('id', routeId);
+          .eq('id', routeId)
+          .eq('user_id', user.id);
 
+        console.log('Supabase update result for rename:', result);
+        const { data, error } = result;
         if (error) throw error;
 
+        if (!data || data.length === 0) {
+          // No rows updated - maybe ownership/RLS prevented the update
+          throw new Error('No rows updated (possible permissions issue)');
+        }
+
         notify('Route renamed successfully', 'success');
+        // Refresh the list and wait for it to complete before closing
+        await this.loadUserRoutes(); // Refresh the list
         bsModal.hide();
-        this.loadUserRoutes(); // Refresh the list
       } catch (err) {
         console.error('Rename route failed', err);
-        notify('Failed to rename route', 'danger');
+        notify('Failed to rename route: ' + (err.message || 'Unknown error'), 'danger');
+      } finally {
+        saveBtn.disabled = false;
       }
-
-      // Clean up
-      saveBtn.removeEventListener('click', saveHandler);
     };
+
+    // Store handler reference
+    const handlerId = 'saveHandler_' + Date.now();
+    window[handlerId] = saveHandler;
+    saveBtn.setAttribute('data-save-handler', handlerId);
 
     // Add save button handler
     saveBtn.addEventListener('click', saveHandler);
 
     // Clean up when modal is hidden
     modal.addEventListener('hidden.bs.modal', () => {
-      saveBtn.removeEventListener('click', saveHandler);
+      if (window[handlerId]) {
+        saveBtn.removeEventListener('click', window[handlerId]);
+        delete window[handlerId];
+      }
     }, { once: true });
   }
 
@@ -561,12 +592,14 @@ class ProfileManager {
         
       if (error) throw error;
       
+      console.log('loadUserRoutes fetched routes:', routes);
       if (!routes || routes.length === 0) {
         userRoutesList.innerHTML = '<div class="text-muted">No saved routes</div>';
         return;
       }
       
       for (const route of routes) {
+        console.log('Rendering route:', route.id, route.name);
         const div = document.createElement('div');
         div.className = 'd-flex justify-content-between align-items-center border-bottom py-2';
         div.innerHTML = `

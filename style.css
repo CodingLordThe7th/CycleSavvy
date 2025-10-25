@@ -1,12 +1,144 @@
 /* Centralized styles for CycleSavvy app */
 
+/* Import fonts for the app */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+/* Dark mode text color override */
+body.bg-dark h5 {
+  color: #fff !important;
+}
+
+/* Heading helper that can be themed */
+.theme-heading {
+  color: #212529;
+}
+body.bg-dark .theme-heading {
+  color: #fff !important;
+}
+
+/* Modal dark mode overrides so modals match app theme */
+body.bg-dark .modal-content {
+  background-color: #212529 !important; /* Bootstrap dark */
+  color: #fff !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+body.bg-dark .modal-header,
+body.bg-dark .modal-body,
+body.bg-dark .modal-footer {
+  color: #fff !important;
+}
+body.bg-dark .modal-content .form-control {
+  background-color: #343a40 !important;
+  color: #fff !important;
+  border-color: #495057 !important;
+}
+body.bg-dark .modal-content .form-label {
+  color: #e9ecef !important;
+}
+/* Make the close button visible in dark mode */
+body.bg-dark .btn-close {
+  filter: invert(1) grayscale(1) brightness(2) !important;
+}
+
+/* Global typography styles */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6, .theme-heading {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: 2.5rem; margin-bottom: 1.5rem; }
+h2 { font-size: 2rem; margin-bottom: 1.25rem; }
+h3 { font-size: 1.75rem; margin-bottom: 1rem; }
+h4 { font-size: 1.5rem; margin-bottom: 0.75rem; }
+h5 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+h6 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+
+p {
+  margin-bottom: 1.2rem;
+  font-weight: 400;
+}
+
+.lead {
+  font-size: 1.2rem;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+:root {
+  /* Color tokens */
+  --brand: #0d6efd; /* bootstrap primary */
+  --brand-600: #0b5ed7;
+  --accent: #0dcaf0;
+  --bg: #f7fbff;
+  --card-bg: #ffffff;
+  --muted: #6c757d;
+  --panel-shadow: 0 6px 20px rgba(14,30,37,0.08);
+  --glass-bg: rgba(255,255,255,0.65);
+  --radius: 12px;
+  
+  /* Animation tokens */
+  --transition-fast: 150ms ease-out;
+  --transition-medium: 300ms ease-out;
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Global animation styles */
+.animate-fade-in {
+  animation: fadeIn var(--transition-medium);
+}
+
+.animate-slide-up {
+  animation: slideUp var(--transition-medium);
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .7; }
+}
+
 /* Page layout */
 html, body {
   height: 100%;
   margin: 0;
   display: flex;
   flex-direction: column;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg, var(--bg), #ffffff);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
 /* Map container takes remaining vertical space */
@@ -45,6 +177,12 @@ html, body {
   box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
+  transition: transform var(--transition-medium);
+}
+
+/* Hide navbar on scroll down */
+.Navbar.hide {
+  transform: translateY(100%);
 }
 
 /* Dark-mode navbar variant (used when bg-dark is present on body) */
@@ -96,6 +234,63 @@ body.bg-dark .Navbar {
   transform: translateX(-50%);
   z-index: 1000;
   max-width: 500px;
+  animation: slideDown var(--transition-slow);
+}
+
+/* Give the floating control card a soft glass panel look */
+.control-card .card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(6px) saturate(120%);
+  border-radius: var(--radius);
+  box-shadow: var(--panel-shadow);
+  border: 1px solid rgba(13,110,253,0.06);
+  transition: all var(--transition-medium);
+}
+
+.control-card .card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--panel-shadow), 0 8px 24px rgba(13,110,253,0.12);
+}
+
+/* Button animations */
+.btn {
+  transition: all var(--transition-fast);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+/* Form control animations */
+.form-control {
+  transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13,110,253,0.1);
+}
+
+/* Modal animations */
+.modal.fade .modal-dialog {
+  transition: transform var(--transition-medium);
+  transform: scale(0.95);
+}
+
+.modal.show .modal-dialog {
+  transform: scale(1);
+}
+
+/* Add slide down animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 /* Tweak control card typography to keep controls on one line */
@@ -125,6 +320,11 @@ body.bg-dark .Navbar {
   width: 400px;
 }
 
+#fetchRouteCard .card {
+  border-radius: 14px;
+  box-shadow: var(--panel-shadow);
+}
+
 /* Dropdown menu auto-sizes to content */
 .dropdown-menu {
   min-width: max-content !important;
@@ -146,6 +346,57 @@ main {
   padding: 20px;
 }
 
+/* Global card improvements */
+.card {
+  border-radius: 12px;
+  background: var(--card-bg);
+  box-shadow: 0 6px 18px rgba(20,30,40,0.06);
+  border: 1px solid rgba(16,24,40,0.04);
+}
+
+/* Make headings feel friendlier */
+h1, h2, h3 {
+  font-weight: 600;
+  color: #0f1724;
+}
+
+/* Buttons: slightly larger, pill-like, gentle shadows */
+.btn {
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background-color: var(--brand);
+  border-color: var(--brand-600);
+  box-shadow: 0 6px 18px rgba(13,110,253,0.12);
+}
+.btn-outline-primary {
+  border-radius: 10px;
+}
+
+/* Account card: better visual prominence */
+#authCard .card {
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(10,20,30,0.12);
+  padding: 0.2rem;
+}
+
+/* Improve modal visuals (joinTrailModal, gpxInstallModal, etc.) */
+.modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Toast looks */
+.toast.align-items-center.text-bg-primary {
+  background: linear-gradient(90deg,var(--brand), var(--brand-600));
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(12,40,80,0.14);
+}
+
 /* Settings page dark-mode tweaks */
 body.bg-dark .card {
   background-color: #4b4b4b;
@@ -157,6 +408,104 @@ body.bg-dark label,
 body.bg-dark h1 {
   color: #f8f9fa;
 }
+
+/* Ensure muted and small text remains readable in dark mode */
+body.bg-dark {
+  /* keep existing bg-dark behavior but ensure global text color is readable */
+  color: #e6eef8;
+}
+
+/* When dark mode is enabled, replace the light page gradient with a darker one */
+body.bg-dark {
+  background: linear-gradient(180deg, #071226 0%, #0b1724 60%);
+}
+
+body.bg-dark .text-muted,
+body.bg-dark small,
+body.bg-dark .form-text,
+body.bg-dark .card-text,
+body.bg-dark .lead {
+  color: rgba(255,255,255,0.75) !important;
+}
+
+/* Form controls in dark mode: keep contrast and readable placeholders */
+body.bg-dark .form-control,
+body.bg-dark .form-select,
+body.bg-dark textarea {
+  background-color: #2b2f33;
+  color: #e6eef8;
+  border-color: rgba(255,255,255,0.06);
+}
+body.bg-dark .form-control::placeholder {
+  color: rgba(255,255,255,0.45);
+}
+
+/* Profile page: ensure plaintext form controls and list items are visible in dark mode */
+body.bg-dark .form-control-plaintext,
+body.bg-dark #userRoutesList,
+body.bg-dark #invitationsList {
+  color: rgba(255,255,255,0.9);
+}
+
+/* Card header in dark mode */
+body.bg-dark .card-header {
+  background-color: rgba(255,255,255,0.05);
+  border-bottom-color: rgba(255,255,255,0.08);
+  color: #f8f9fa;
+}
+
+/* Route and invitation lists: ensure links and items are visible */
+body.bg-dark #userRoutesList a,
+body.bg-dark #invitationsList a {
+  color: var(--accent);
+}
+
+body.bg-dark #userRoutesList .text-muted,
+body.bg-dark #invitationsList .text-muted {
+  color: rgba(255,255,255,0.6) !important;
+}
+
+/* Ensure leaderboard invitations are visible in dark mode */
+body.bg-dark #invitationsList {
+  color: rgba(255,255,255,0.9);
+}
+body.bg-dark #invitationsList div:not(.text-muted) {
+  color: rgba(255,255,255,0.85);
+}
+
+/* Make translucent control-card adapt in dark mode */
+body.bg-dark .control-card .card {
+  background: rgba(20,24,28,0.56);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Navbar link contrast tweaks for dark mode */
+body.bg-dark .nav-link {
+  color: rgba(255,255,255,0.9) !important;
+}
+body.bg-dark .nav-link.active {
+  background-color: rgba(255,255,255,0.06) !important;
+  color: #fff !important;
+}
+
+/* Make small helper text inside cards visible */
+body.bg-dark .card .small,
+body.bg-dark .card .text-muted,
+body.bg-dark .card div.text-muted {
+  color: rgba(255,255,255,0.72) !important;
+}
+
+/* Loading state text in dark mode */
+body.bg-dark #invitationsList .text-muted {
+  color: rgba(255,255,255,0.85) !important;
+}
+
+/* All text-muted elements in dark mode should be clearly visible */
+body.bg-dark .text-muted {
+  color: rgba(255,255,255,0.85) !important;
+}
+
+/* restore .content styles */
 
 /* Utility: make fixed toasts visible above map controls */
 .position-fixed.bottom-0.end-0.p-3 {
@@ -251,21 +600,60 @@ html, body {
 
 /* Route label shown on map when GPX route is loaded */
 .route-label {
-  background: rgba(255,255,255,0.95);
-  color: #111;
-  padding: 6px 8px;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  font-weight: 600;
+  display: inline-block;
 }
-.route-label .small {
+
+/* Use a card-like dark translucent background to ensure white text contrasts
+   well on top of map tiles in both light and dark themes. Force readable
+   font and colors and allow theme to tweak opacity if necessary. */
+.route-label.card {
+  background: rgba(0,0,0,0.72) !important;
+  color: #ffffff !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 6px 22px rgba(2,8,20,0.45) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  font-family: 'Outfit', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.route-label.card .card-body {
+  padding: 6px 10px !important;
+  color: #ffffff !important;
+  text-align: center;
+}
+
+.route-label.card strong {
+  display: block;
+  font-size: 0.98rem;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #ffffff !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.route-label.card .small {
   display: block;
   font-weight: 400;
-  color: #555;
+  color: rgba(255,255,255,0.86) !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-size: 0.82rem;
 }
+
 .leaflet-marker-icon.route-label-icon {
   background: transparent;
   border: 0;
+}
+
+/* Slightly different tint if the app is in light mode and user prefers a softer label */
+body:not(.bg-dark) .route-label.card {
+  background: rgba(0,0,0,0.68) !important;
+}
+
+/* Keep label legible in dark mode as well */
+body.bg-dark .route-label.card {
+  background: rgba(0,0,0,0.78) !important;
+  border: 1px solid rgba(255,255,255,0.04) !important;
 }
 
 /* Font preview in settings */
@@ -301,5 +689,5 @@ html, body {
 /* Slightly soften the accordion buttons for readability */
 .accordion-button {
   border-radius: 8px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(245,245,245,0.6));
+  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(250,250,252,0.85));
 }

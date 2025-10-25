@@ -13,13 +13,41 @@ class MapManager {
     this._routeTotalPoints = 0;
     this._progressPercent = 0;
     this.currentRouteLabel = null;
+    this.positionWatchId = null;
+    this.routePins = new Map(); // store route pins by filename
+    // Intercept any attempts to load the default GPX waypoint image 'pin-icon-wpt.png'
+    // and rewrite them to use the project's `images/trail_marker.png` instead.
+    // This prevents 404s when external code/plugin tries to fetch the missing asset.
+    try {
+      const desc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+      if (desc && desc.set) {
+        const originalSetter = desc.set;
+        Object.defineProperty(HTMLImageElement.prototype, 'src', {
+          set: function(value) {
+            try {
+              if (typeof value === 'string' && value.indexOf('pin-icon-wpt.png') !== -1) {
+                value = 'images/trail_marker.png';
+              }
+            } catch (e) { /* ignore */ }
+            return originalSetter.call(this, value);
+          },
+          get: desc.get,
+          configurable: true,
+          enumerable: true
+        });
+      }
+    } catch (e) { console.warn('Failed to patch Image.src to rewrite pin-icon-wpt.png', e); }
+
     this.init();
   }
 
   // Remove the currently loaded route from the map and reset related state
   exitCurrentRoute() {
     try {
-      // Hide any open routeLoadedModal
+      // Stop position monitoring first
+      this.stopPositionMonitoring();
+      
+      // If a legacy routeLoadedModal exists, hide it (safe no-op if missing)
       try {
         const modalEl = document.getElementById('routeLoadedModal');
         if (modalEl) {
@@ -52,6 +80,9 @@ class MapManager {
       // Hide the trail controls if they're visible
       const trailControls = document.getElementById('trailControls');
       if (trailControls) trailControls.style.display = 'none';
+
+      // Make sure all route pins are visible
+      this.addAllRoutePins();
 
     } catch (err) {
       console.warn('exitCurrentRoute failed', err);
@@ -112,9 +143,296 @@ class MapManager {
     // Initialize map
     this.map = L.map('map').setView([37.779, -121.984], 13);
 
+    // Add tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
+
+    // Add pins once the map is ready
+    this.map.whenReady(() => {
+      this.addAllRoutePins();
+    });
+  }
+
+  // Calculate the midpoint between two coordinates
+  _calculateMidpoint(coord1, coord2) {
+    return [
+      (coord1[0] + coord2[0]) / 2,
+      (coord1[1] + coord2[1]) / 2
+    ];
+  }
+
+  // Create a custom pin icon
+  _createPinIcon() {
+    return L.icon({
+      iconUrl: 'images/route_pin.png',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32],
+      className: 'route-pin-icon'  // Add a custom class for styling
+    });
+  }
+
+  // Add a pin for a route
+  async addRoutePin(routeFile) {
+    try {
+      // Extract just the filename if a full path is provided
+      const filename = routeFile.split('/').pop();
+      
+      const response = await fetch(`preloaded_routes/${filename}`);
+      const gpxStr = await response.text();
+      const parser = new DOMParser();
+      const gpx = parser.parseFromString(gpxStr, 'text/xml');
+      
+      // Get all track points
+      const points = Array.from(gpx.getElementsByTagName('trkpt'));
+      
+        if (points.length >= 2) {
+          // Convert all points to coordinates
+          const coords = points.map(point => [
+            parseFloat(point.getAttribute('lat')),
+            parseFloat(point.getAttribute('lon'))
+          ]);
+          
+          // Use the starting point of the trail for the pin (first track point)
+          const midpoint = coords[0];
+          // Create pin marker
+        const marker = L.marker(midpoint, {
+          icon: this._createPinIcon()
+        });
+        
+        // Add click handler
+        marker.on('click', () => {
+          // If the route is already loaded, remove it
+          if (this.currentRouteLayer && this.currentRouteName === routeName) {
+            this.exitCurrentRoute();
+            return;
+          }
+          
+          // Remove any existing different route first
+          this.exitCurrentRoute();
+          
+          // Load the route directly without going through route selector
+          if (this.currentRouteLayer) {
+            try { this.map.removeLayer(this.currentRouteLayer); } catch (e) {}
+            this.currentRouteLayer = null;
+          }
+          
+          this.currentRouteLayer = new L.GPX(`preloaded_routes/${filename}`, {
+            async: true,
+            marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null, wptIconUrl: 'images/trail_marker.png' },
+            polyline_options: { color: "purple", weight: 4 }
+          })
+            .on("loaded", (e) => {
+              this.map.fitBounds(e.target.getBounds());
+              
+              // Compute length from polyline(s) in meters
+              let totalMeters = 0;
+              e.target.getLayers().forEach(layer => {
+                if (layer instanceof L.Polyline) {
+                  const latlngs = layer.getLatLngs();
+                  for (let i = 1; i < latlngs.length; i++) {
+                    totalMeters += latlngs[i-1].distanceTo(latlngs[i]);
+                  }
+                }
+              });
+
+              // Format length and store for access
+              window.lengthText = formatLengthForSettings(totalMeters);
+              
+              // Store route geometry for tracing/auto-join
+              this.currentRoutePolylines = [];
+              e.target.getLayers().forEach(layer => {
+                if (layer instanceof L.Polyline) {
+                  const latlngs = layer.getLatLngs();
+                  const flat = [].concat(...latlngs.map(l => Array.isArray(l) ? l : [l]));
+                  if (flat && flat.length) this.currentRoutePolylines.push(flat);
+                }
+              });
+              
+              this.currentRouteName = routeName;
+              this._routePointCovered = new Set();
+              this._routeTotalPoints = this.currentRoutePolylines.reduce((sum, p) => sum + (p ? p.length : 0), 0);
+              this._progressPercent = 0;
+              this._updateProgressUI();
+
+              // Add route label
+              if (this.currentRouteLabel) {
+                try { this.map.removeLayer(this.currentRouteLabel); } catch (ex) {}
+                this.currentRouteLabel = null;
+              }
+
+              const midLatLng = e.target.getLayers().find(layer => 
+                layer instanceof L.Polyline
+              )?.getLatLngs()[Math.floor(e.target.getLayers()[0].getLatLngs().length/2)];
+
+              if (midLatLng) {
+                const html = `
+                  <div class="route-label card">
+                    <div class="card-body p-2 text-center">
+                      <strong class="d-block">${routeName}</strong>
+                      <span class="small text-body-secondary">${window.lengthText}</span>
+                    </div>
+                  </div>
+                `;
+                const icon = L.divIcon({ 
+                  className: 'route-label-icon', 
+                  html, 
+                  iconSize: [200, 70],  // Increased size for better visibility
+                  iconAnchor: [100, -30] // Center horizontally and offset vertically
+                });
+                this.currentRouteLabel = L.marker(midLatLng, { icon, interactive: false }).addTo(this.map);
+              }
+
+              notify("Route loaded: " + routeName + " — " + window.lengthText, "success");
+            })
+            .on("error", (err) => {
+              console.error("GPX load error", err);
+              notify("Failed to load GPX route.", "danger");
+            })
+            .addTo(this.map);
+        });
+        
+        // Format the route name to be more descriptive
+        const formatRouteName = (filename) => {
+          // Remove .gpx extension
+          let name = filename.replace('.gpx', '');
+          
+          // Special case mappings for known routes
+          const routeMappings = {
+            'schoolroute': 'School Route - Urban Commute',
+            'artistpoint': 'Artist Point - Mountain Vista Trail',
+            'christianityspireloop': 'Christianity Spire - Scenic Loop',
+            'coloradoriverloop': 'Colorado River - Scenic Loop Trail',
+            'crescentglacierloop': 'Crescent Glacier - Alpine Loop',
+            'gumbolimbo': 'Gumbo Limbo - Nature Trail',
+            'ironhorse': 'Iron Horse - Historic Railway Trail',
+            'laddercanyon': 'Ladder Canyon - Desert Adventure',
+            'middleteton': 'Middle Teton - Mountain Ascent',
+            'pleasantonridge': 'Pleasanton Ridge - Bay Area Vista',
+            // mapping for newly added file (or renamed versions)
+            'lastrampascorralcamp': 'Las Trampas — Corral Camp Loop'
+          };
+
+          // If we have a special mapping, use it
+          if (routeMappings[name.toLowerCase()]) {
+            return routeMappings[name.toLowerCase()];
+          }
+
+          // For other files, format nicely with categories based on name
+          return name
+            // Split on hyphens, underscores, and spaces
+            .split(/[-_\s]/)
+            // Capitalize each word
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ')
+            // Add appropriate categories based on keywords
+            .replace(/ Loop( Trail)?$/, ' - Scenic Loop Trail')
+            .replace(/ Peak( Trail)?$/, ' - Mountain Summit Trail')
+            .replace(/ Lake( Trail)?$/, ' - Lake View Trail')
+            .replace(/ via /, ' via ')  // Keep "via" lowercase if not at start
+            .replace(/^Via /, 'Via ');  // Keep "Via" capitalized at start
+        };
+
+        const routeName = formatRouteName(filename);
+        const gpx = new L.GPX(`preloaded_routes/${filename}`, {
+          async: true,
+          marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null, wptIconUrl: 'images/trail_marker.png' },
+          polyline_options: { weight: 3, color: '#666', opacity: 0.75 }
+        });
+        
+        gpx.once('loaded', (e) => {
+          try {
+            // Calculate route length
+            let totalMeters = 0;
+            e.target.getLayers().forEach(layer => {
+              if (layer instanceof L.Polyline) {
+                const latlngs = layer.getLatLngs();
+                // Handle both flat and nested arrays of coordinates
+                const flatLatLngs = latlngs.every(l => l instanceof L.LatLng) ? 
+                  latlngs : 
+                  [].concat(...latlngs);
+                
+                for (let i = 1; i < flatLatLngs.length; i++) {
+                  const dist = L.latLng(flatLatLngs[i-1]).distanceTo(L.latLng(flatLatLngs[i]));
+                  if (!isNaN(dist)) {
+                    totalMeters += dist;
+                  }
+                }
+              }
+            });
+            
+            // Format length according to user settings
+            const lengthText = formatLengthForSettings(totalMeters);
+            
+            // Update popup content with route details
+            const popupContent = `
+              <div class="route-popup">
+                <h5>${routeName}</h5>
+                <p>Length: ${lengthText}</p>
+                <button class="btn btn-primary btn-sm" onclick="window.mapManager.loadRouteFromPin('${routeFile}')">Load Route</button>
+              </div>
+            `;
+            marker.setPopupContent(popupContent);
+          } catch (err) {
+            console.warn('Failed to compute route details for popup', err);
+            marker.setPopupContent(`${routeName}<br><button class="btn btn-primary btn-sm" onclick="window.mapManager.loadRouteFromPin('${routeFile}')">Load Route</button>`);
+          }
+        });
+
+        // Initial popup content while calculating details
+        marker.bindPopup(`${routeName}<br>Loading route details...`);
+        
+        // Add to map and store reference
+        marker.addTo(this.map);
+        this.routePins.set(routeFile, marker);
+      }
+    } catch (error) {
+      console.warn(`Failed to add pin for route ${routeFile}:`, error);
+    }
+  }
+
+  // Add pins for all preloaded routes
+  async addAllRoutePins() {
+    try {
+      const preloadedRoutes = [
+        'artistpoint.gpx',
+        'christianityspireloop.gpx',
+        'coloradoriverloop.gpx',
+        'crescentglacierloop.gpx',
+        'devilsgardenloop.gpx',
+        'doughtyfalls.gpx',
+        'gumbolimbo.gpx',
+        'ironhorse.gpx',
+        'laddercanyon.gpx',
+        'melakwalake.gpx',
+        'middleteton.gpx',
+        'pleasantonridge.gpx',
+        'lastrampascorralcamp.gpx',
+        'quandarypeak.gpx',
+        'schoolroute.gpx',
+        'tahoerimtrail.gpx',
+        'washingtoncommonwealthtrail.gpx'
+      ];
+      
+      // Clear existing pins first
+      this.clearRoutePins();
+      
+      // Add a pin for each preloaded route
+      for (const route of preloadedRoutes) {
+        await this.addRoutePin(route);
+      }
+    } catch (error) {
+      console.warn('Failed to add route pins:', error);
+    }
+  }
+
+  // Remove all route pins from the map
+  clearRoutePins() {
+    for (const marker of this.routePins.values()) {
+      this.map.removeLayer(marker);
+    }
+    this.routePins.clear();
   }
 
   setupMapHandlers() {
@@ -125,11 +443,14 @@ class MapManager {
     const routeSelect = document.getElementById("routeSelect");
     const loadRouteBtn = document.getElementById("loadRoute");
     const cancelFetchBtn = document.getElementById("cancelFetch");
-  const endTrailBtn = document.getElementById('endTrailBtn');
+    const endTrailBtn = document.getElementById('endTrailBtn');
 
     if (!historyBtn) return;
 
-    // Populate history list only when dropdown opens
+    // Add route pins when map is loaded
+    this.map.whenReady(() => {
+      this.addAllRoutePins();
+    });    // Populate history list only when dropdown opens
     historyBtn.addEventListener("shown.bs.dropdown", async () => {
       await this.populateHistoryList();
     });
@@ -279,7 +600,7 @@ class MapManager {
     try {
       this.currentRouteLayer = new L.GPX(selectedFile, {
         async: true,
-        marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null },
+    marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null, wptIconUrl: 'images/trail_marker.png' },
         polyline_options: { color: "purple", weight: 4 }
       })
         .on("loaded", (e) => {
@@ -323,8 +644,23 @@ class MapManager {
             }
 
             if (midLatLng) {
-              const html = `<div class="route-label">${routeName}<span class="small">${lengthText}</span></div>`;
-              const icon = L.divIcon({ className: 'route-label-icon', html, iconSize: [120, 40] });
+              // Use the globally-set window.lengthText (set above) as a reliable source
+              const displayLength = (window.lengthText || '');
+              // Use the same card markup used when loading via pin so CSS styles apply
+              const html = `
+                <div class="route-label card">
+                  <div class="card-body p-2 text-center">
+                    <strong class="d-block">${routeName}</strong>
+                    <span class="small text-body-secondary">${displayLength}</span>
+                  </div>
+                </div>
+              `;
+              const icon = L.divIcon({ 
+                className: 'route-label-icon', 
+                html, 
+                iconSize: [200, 70],
+                iconAnchor: [100, -30]
+              });
               this.currentRouteLabel = L.marker(midLatLng, { icon, interactive: false }).addTo(this.map);
             }
 
@@ -356,62 +692,15 @@ class MapManager {
             console.warn('Failed to compute route length/label', err);
           }
 
-            const lengthStr = lengthText || "Unknown length";
+            // lengthText may be undefined in this scope; use window.lengthText as the canonical value
+            const lengthStr = (window.lengthText || "Unknown length");
             notify("Route loaded: " + routeName + " — " + lengthStr, "success");
 
-            // Show route loaded notification
+            // No interactive 'route loaded' modal in this build; notify only
+            // (If legacy modal elements exist, ignore them.)
             try {
-              const modalEl = document.getElementById('routeLoadedModal');
-              const modalText = document.getElementById('routeLoadedText');
-              const startBtn = document.getElementById('routeLoadedStartBtn');
-              const showBtn = document.getElementById('routeLoadedShowBtn');
-              const exitBtn = document.getElementById('routeLoadedExitBtn');
-              
-              if (modalEl && modalText && startBtn && exitBtn) {
-                modalText.textContent = `Route "${routeName}" loaded (${lengthStr}). Choose an action from the menu in the top right.`;
-                const modal = new bootstrap.Modal(modalEl, { backdrop: true });
-
-                const onStart = () => {
-                  modal.hide();
-                  this._startTracing();
-                  // Center map on route start
-                  if (this.currentRoutePolylines && this.currentRoutePolylines[0] && this.currentRoutePolylines[0][0]) {
-                    this.map.setView(this.currentRoutePolylines[0][0], 16);
-                  }
-                  startBtn.removeEventListener('click', onStart);
-                  exitBtn.removeEventListener('click', onExit);
-                };
-
-                const onExit = () => {
-                  modal.hide();
-                  this.exitCurrentRoute();
-                  // cleanup listeners
-                  exitBtn.removeEventListener('click', onExit);
-                  startBtn.removeEventListener('click', onStart);
-                };
-
-                startBtn.addEventListener('click', onStart);
-                exitBtn.addEventListener('click', onExit);
-
-                // Listen for modal shown/hidden events
-                const onShown = () => {
-                  // Focus the start button by default when modal shows
-                  startBtn.focus();
-                };
-
-                const onHidden = () => {
-                  // Clean up listeners when modal is hidden
-                  modalEl.removeEventListener('shown.bs.modal', onShown);
-                  modalEl.removeEventListener('hidden.bs.modal', onHidden);
-                  startBtn.removeEventListener('click', onStart);
-                  exitBtn.removeEventListener('click', onExit);
-                };
-
-                modalEl.addEventListener('shown.bs.modal', onShown);
-                modalEl.addEventListener('hidden.bs.modal', onHidden);
-                modal.show();
-              }
-            } catch (err) { console.warn('routeLoaded modal failed', err); }
+              // nothing to do here beyond notification
+            } catch (err) { console.warn('routeLoaded cleanup failed', err); }
         })
         .on("error", (err) => {
           console.error("GPX load error", err);
@@ -425,6 +714,21 @@ class MapManager {
       console.error("Error creating GPX layer", ex);
       showToast("Failed to add route to map.", "danger");
     }
+  }
+
+  // Load a route when clicking the button in a pin's popup
+  loadRouteFromPin(routeFile) {
+    // Remove any existing route first
+    this.exitCurrentRoute();
+    
+    // Set the route selector value
+    const routeSelect = document.getElementById('routeSelect');
+    if (routeSelect) {
+      routeSelect.value = routeFile;
+    }
+    
+    // Load the route
+    this.loadPreloadedRoute();
   }
 
   loadGPXRoute(url) {
@@ -441,10 +745,13 @@ class MapManager {
     .on('loaded', e => { 
       this.map.fitBounds(e.target.getBounds()); 
       notify("User route loaded", "success");
+      // Start monitoring position as soon as route is loaded
+      this.startPositionMonitoring();
     })
     .on('error', err => {
       console.error("GPX load error", err);
       notify("Failed to load user route", "danger");
+      this.stopPositionMonitoring();
     })
     .addTo(this.map);
   }
@@ -521,10 +828,67 @@ class MapManager {
         }
       }
       
+      // debug: log whether a close endpoint was found
+      if (closestMatch) {
+        console.debug('checkNearEndpoint: found', closestMatch.which, 'dist=', closestMatch.distance, 'route=', closestMatch.routeName);
+      } else {
+        console.debug('checkNearEndpoint: none within', thresholdMeters, 'm');
+      }
       return closestMatch;
     } catch (err) {
       console.warn('checkNearEndpoint error:', err);
       return null;
+    }
+  }
+
+  // Start monitoring position for nearby routes
+  startPositionMonitoring() {
+    if (this.positionWatchId) {
+      return; // Already monitoring
+    }
+
+    if (navigator.geolocation) {
+      const geoOptions = {
+        enableHighAccuracy: true,
+        maximumAge: 500,
+        timeout: 2000
+      };
+
+      // Get initial position immediately
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latlng = [position.coords.latitude, position.coords.longitude];
+          const near = this.checkNearEndpoint(latlng, 100);
+          if (near) {
+            this.showJoinModal(near);
+          }
+        },
+        (error) => console.warn('Error getting initial position:', error),
+        geoOptions
+      );
+
+      // Then start watching position
+      this.positionWatchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const latlng = [position.coords.latitude, position.coords.longitude];
+          if (!this.tracing) {
+            const near = this.checkNearEndpoint(latlng, 100);
+            if (near) {
+              this.showJoinModal(near);
+            }
+          }
+        },
+        (error) => console.warn('Position watch error:', error),
+        geoOptions
+      );
+    }
+  }
+
+  // Stop position monitoring
+  stopPositionMonitoring() {
+    if (this.positionWatchId) {
+      navigator.geolocation.clearWatch(this.positionWatchId);
+      this.positionWatchId = null;
     }
   }
 
@@ -553,6 +917,77 @@ class MapManager {
     this._updateProgressUI();
   }
 
+  // Show the Join Trail modal for a given `near` object (which, routeName, poly, distance)
+  showJoinModal(near) {
+    try {
+      const joinModalEl = document.getElementById('joinTrailModal');
+      if (!joinModalEl) {
+        console.warn('showJoinModal: joinTrailModal element missing');
+        return;
+      }
+
+      const now = Date.now();
+      const lastShown = Number(joinModalEl.getAttribute('data-last-shown') || '0');
+      if (now - lastShown < 10000) {
+        console.debug('showJoinModal: debounce active');
+        return;
+      }
+
+      const joinText = document.getElementById('joinTrailText');
+      if (joinText) joinText.textContent = `You're close to the ${near.which} of "${near.routeName}". Would you like to join?`;
+
+      try { const ex = bootstrap.Modal.getInstance(joinModalEl); if (ex) { ex.hide(); ex.dispose(); } } catch(e){}
+      const modal = new bootstrap.Modal(joinModalEl, { 
+        backdrop: true, 
+        keyboard: true, 
+        focus: false  // Disable automatic focus
+      });
+
+      const confirmBtn = document.getElementById('joinTrailConfirm');
+      const cancelBtn = document.getElementById('joinTrailCancel');
+      if (!confirmBtn || !cancelBtn) { this._startTracing(); return; }
+
+      // Function to properly close modal
+      const closeModal = () => {
+        // Remove focus from any buttons before hiding
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        modal.hide();
+      };
+
+      confirmBtn.onclick = () => {
+        try {
+          closeModal();
+          this._startTracing();
+          const snapPoint = (near.which === 'start') ? near.poly[0] : near.poly[near.poly.length - 1];
+          if (this.traceMarker) this.traceMarker.setLatLng(snapPoint);
+          this.map.setView(snapPoint, 16);
+        } catch (e) { console.warn('confirm handler failed', e); }
+      };
+      
+      cancelBtn.onclick = () => { 
+        try { 
+          closeModal();
+        } catch(e){} 
+      };
+
+      // Also handle modal hiding via Bootstrap events
+      joinModalEl.addEventListener('hide.bs.modal', () => {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      });
+
+      joinModalEl.setAttribute('data-last-shown', String(now));
+      joinModalEl.addEventListener('shown.bs.modal', () => console.debug('showJoinModal: shown'), { once: true });
+      modal.show();
+    } catch (err) {
+      console.warn('showJoinModal failed, starting tracing', err);
+      this._startTracing();
+    }
+  }
+
   _stopTracing() {
     this.tracing = false;
     
@@ -573,19 +1008,32 @@ class MapManager {
   // Process a live position update from ride-tracker
   processPosition(latlng) {
     try {
+      console.debug('processPosition called with', latlng, 'tracing=', this.tracing, 'routePolylines=', (this.currentRoutePolylines && this.currentRoutePolylines.length) || 0);
       // If no active route geometry, nothing to auto-join
-      if (!this.currentRoutePolylines || this.currentRoutePolylines.length === 0) return;
+      if (!this.currentRoutePolylines || this.currentRoutePolylines.length === 0) {
+        console.debug('processPosition: no currentRoutePolylines, skipping');
+        return;
+      }
 
       const p = L.latLng(latlng);
 
       // If not yet tracing, check for near-endpoint to prompt join
       if (!this.tracing) {
-        const near = this.checkNearEndpoint(latlng, 25); // 25m threshold
+        const near = this.checkNearEndpoint(latlng, 100); // 100m threshold
         if (near) {
-          // Show join modal with info
+          // Show join modal with info (robust wiring + simple debounce)
           try {
             const joinModalEl = document.getElementById('joinTrailModal');
             if (!joinModalEl) return;  // Safety check
+
+            // debounce: don't reshow if shown in last 10s
+            const lastShown = Number(joinModalEl.getAttribute('data-last-shown') || '0');
+            const now = Date.now();
+            if (now - lastShown < 10000) {
+              // recently shown; skip
+              console.debug('joinTrailModal: skipped (debounce)');
+              return;
+            }
 
             // Update modal text
             const joinText = document.getElementById('joinTrailText');
@@ -593,63 +1041,58 @@ class MapManager {
               joinText.textContent = `You're close to the ${near.which} of "${near.routeName}". Would you like to join?`;
             }
 
-            // First, hide any existing modal
-            const existingModal = bootstrap.Modal.getInstance(joinModalEl);
-            if (existingModal) {
-              existingModal.hide();
-              existingModal.dispose();
-            }
+            // Dispose any existing bootstrap instance
+            try {
+              const existingModal = bootstrap.Modal.getInstance(joinModalEl);
+              if (existingModal) {
+                existingModal.hide();
+                existingModal.dispose();
+              }
+            } catch (e) { /* ignore */ }
 
-            // Create new modal instance
-            // Create modal with backdrop for better visibility
+            // Create modal instance
             const modal = new bootstrap.Modal(joinModalEl, {
-              backdrop: true,    // Add semi-transparent backdrop
-              keyboard: true,    // Allow ESC key to close
-              focus: true       // Ensure modal gets focus
+              backdrop: true,
+              keyboard: true,
+              focus: true
             });
 
             // Get control buttons
             const confirmBtn = document.getElementById('joinTrailConfirm');
             const cancelBtn = document.getElementById('joinTrailCancel');
 
-            // Setup event handlers
-            const onConfirm = () => {
-              modal.hide();
+            // Ensure elements exist
+            if (!confirmBtn || !cancelBtn) {
+              // If controls missing, fallback to auto-start tracing
               this._startTracing();
-              // Get the endpoint we're joining at
-              const snapPoint = (near.which === 'start') ? near.poly[0] : near.poly[near.poly.length - 1];
-              // Update marker position and map view
-              if (this.traceMarker) {
-                this.traceMarker.setLatLng(snapPoint);
-              }
-              this.map.setView(snapPoint, 16);
-            };
+              return;
+            }
 
-            const onCancel = () => {
-              modal.hide();
-            };
-
-            // Clean up old handlers if any
-            confirmBtn.replaceWith(confirmBtn.cloneNode(true));
-            cancelBtn.replaceWith(cancelBtn.cloneNode(true));
-            
-            // Add fresh handlers
-            document.getElementById('joinTrailConfirm').addEventListener('click', onConfirm);
-            document.getElementById('joinTrailCancel').addEventListener('click', onCancel);
-
-            // Auto-cleanup on hide
-            joinModalEl.addEventListener('hidden.bs.modal', () => {
+            // Wire up handlers using onclick to avoid duplicate listeners
+            confirmBtn.onclick = () => {
               try {
-                modal.dispose();
-              } catch(e) { 
-                console.warn('Modal cleanup error:', e);
-              }
-            }, { once: true });
+                modal.hide();
+                this._startTracing();
+                const snapPoint = (near.which === 'start') ? near.poly[0] : near.poly[near.poly.length - 1];
+                if (this.traceMarker) this.traceMarker.setLatLng(snapPoint);
+                this.map.setView(snapPoint, 16);
+              } catch (e) { console.warn('join confirm handler failed', e); }
+            };
+
+            cancelBtn.onclick = () => {
+              try { modal.hide(); } catch (e) {}
+            };
+
+            // mark shown time for debounce
+            joinModalEl.setAttribute('data-last-shown', String(now));
+
+            // debug hook
+            joinModalEl.addEventListener('shown.bs.modal', () => console.debug('joinTrailModal: shown'), { once: true });
 
             // Show the modal
             modal.show();
           } catch (err) {
-            // fallback: start tracing
+            console.warn('processPosition join modal failed, falling back to start tracing', err);
             this._startTracing();
           }
         }

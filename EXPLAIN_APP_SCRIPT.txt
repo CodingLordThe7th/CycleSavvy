@@ -1,49 +1,42 @@
-Intro
-Hi, I’m going to walk you through CycleSavvy — what it does, how it works, and the main features you can demo.
+CycleSavvy App Demo Script (45 seconds)
 
-1) What CycleSavvy is
-- CycleSavvy is a simple client-side web app for planning, tracking, and sharing bike rides.
-- It uses Leaflet for maps, Supabase for authentication and server-side persistence, and a small set of modules that handle profiles, routes, rides and goals.
+Welcome to CycleSavvy - Your Ultimate Cycling Companion!
 
-2) High-level architecture
-- UI: static HTML pages (index.html, profile.html, settings.html) styled with Bootstrap.
-- Map: Leaflet + leaflet-gpx for loading and displaying GPX route files.
-- Auth & backend: Supabase for user authentication, storing profiles, routes, and ride records.
-- Local storage: lightweight localForage is used for ephemeral route saving; persistent per-user data like goals and profiles is stored in Supabase.
+[0:00-0:10]
+CycleSavvy is your all-in-one cycling companion that helps you track, plan, and enhance your biking adventures. Our interactive map powered by Leaflet technology shows your real-time location and lets you visualize your routes with incredible detail.
 
-3) Main modules and responsibilities
-- js/supabase-config.js
-  - Initializes a Supabase client used across the app.
-- js/auth.js
-  - Manages signup/login, sign-out, and provides helper methods `getCurrentUser()` and `signOut()`.
-  - Emits auth state changes which other modules listen to.
-- js/profile.js
-  - Manages the profile page: displays email, weight, preloaded route preference, saved GPX uploads, and the Goals UI.
-  - Goals are stored inside the `profiles.profile` JSON column in Supabase, under `profile.goals`.
-  - Supports adding goals (title, recurrence, type, target), deleting goals, manual +1 increments, progress bars, streaks, and awarding points on completion.
-- js/map-manager.js
-  - Loads GPX routes (preloaded and user-uploaded), displays them on the map, and creates markers/labels.
-- js/ride-tracker.js
-  - Tracks live GPS while riding, builds a polyline and computes distances/durations.
-  - Saves rides (locally via localForage and to Supabase) and computes points and calories estimates.
-  - Points are recorded on the ride and the user's `profiles.cumulative_score` is updated.
+[0:10-0:20]
+Getting started is effortless - tap the green play button to begin tracking your ride. The app records your route, speed, and distance in real-time. When you're done, hit the red stop button to save your session and earn points based on your achievements.
 
-4) Feature walkthrough / demo script
-- Start at the map (index.html). You can load preloaded routes from the examples or upload a GPX on the profile page and then load it.
-- Sign up or log in. The app uses Supabase for auth; when you sign in, your email appears on the Profile page.
-- Profile page:
-  - Edit weight (used to estimate calories).
-  - Toggle whether to show preloaded routes in selectors.
-  - Upload GPX files to your Supabase storage and they’ll appear under "Saved Routes". Click Load to show them on the map.
-  - Goals:
-    - Add a goal: enter a title, recurrence (daily/weekly/monthly), unit type (time in minutes, distance in meters, calories), and target value, then click Add.
-    - The goals list shows progress bars, streak counts, and buttons to manually increment or delete.
-    - Goals are persisted to Supabase in your profile record.
-- Tracking a ride:
-  - On the map, click Start to begin tracking. The app uses device geolocation to record a path.
-  - Click Stop when finished. The ride is stored locally and sent to Supabase (if signed in). The app computes points based on goals or distance.
-- Leaderboard:
-  - The profile page shows a Top-5 leaderboard based on cumulative_score using a server-side RPC (`leaderboard_top5`).
+[0:20-0:30]
+Set personal goals in your profile - whether it's daily distance targets, weekly ride counts, or monthly calorie goals. Our smart tracking system automatically updates your progress and maintains your streaks. Check the leaderboard to see how you rank among other cyclists!
+[0:30-0:40]
+Discover new adventures with our pre-loaded collection of popular routes, from scenic trails like Artist Point to challenging paths like Quandary Peak. Upload your own GPX files to save and share your favorite routes with the community.
+
+[0:40-0:45]
+With secure authentication, customizable settings, and a vibrant community of cyclists, CycleSavvy is your perfect companion for every ride. Start your cycling journey today!
+
+3) Features — Spoken demo (UI-first)
+
+Open the app and the map is front-and-center: it centers on your location and shows routes as clear polylines.
+
+The control card is the main tool: a big green Start button to begin live GPS tracking and a red Stop button to end and save the ride.
+
+While you ride the path is drawn in real time and the live readouts show distance, time, and speed — everything you need at a glance.
+
+Use the History dropdown to pull up past rides instantly and replay or export them.
+
+Pick a route from the built-in list, or upload a GPX from your Profile and load it — the route is drawn on the map so you can follow it.
+
+On the Profile page you can edit weight (for calories), manage uploaded GPX files under Saved Routes, and set goals (daily/weekly/monthly) with progress bars and streaks.
+
+The Community page contains global and custom leaderboards so you can compare rides, create groups, and invite friends.
+
+Bike & Repair gives quick maintenance tips and safety reminders so riders stay prepared.
+
+Settings control theme, font size, and offline behavior. Rides save locally when you're offline and sync to the server when you reconnect.
+
+That’s the UI-first walkthrough — Start, ride, Stop, and everything else is there to help you plan, track, share, and stay safe.
 
 5) Where data lives
 - Supabase tables used:

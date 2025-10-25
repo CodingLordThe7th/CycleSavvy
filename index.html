@@ -80,24 +80,6 @@
     </div>
   </div>
 
-  <!-- Route Loaded Modal -->
-  <div class="modal fade" id="routeLoadedModal" tabindex="-1" aria-labelledby="routeLoadedModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header py-2">
-          <h5 class="modal-title" id="routeLoadedModalLabel">Route Ready</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body text-center py-3">
-          <p id="routeLoadedText" class="mb-3">Route is loaded and ready. What would you like to do?</p>
-          <div class="d-grid gap-2">
-            <button type="button" class="btn btn-primary" id="routeLoadedStartBtn">Start Tracing Route</button>
-            <button type="button" class="btn btn-outline-danger" id="routeLoadedExitBtn">Exit Route</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Fetch Route Modal-like Card -->
   <div class="card shadow" id="fetchRouteCard">
@@ -158,6 +140,62 @@
   <script src="js/app.js"></script>
 
   <!-- Supabase auth UI -->
+  <!-- Intro modal shown on first visit -->
+  <div class="modal fade" id="introModal" tabindex="-1" aria-labelledby="introModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content shadow-lg">
+        <div class="modal-header">
+          <h5 class="modal-title" id="introModalLabel">Welcome to CycleSavvy</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="introClose"></button>
+        </div>
+        <div class="modal-body">
+          <p>Thanks for trying CycleSavvy — a lightweight map and ride tracker. Create an account to save routes, upload GPX files, and sync your rides across devices.</p>
+          <ul>
+            <li>Track rides and save GPX routes.</li>
+            <li>Upload routes from your device via the Profile page.</li>
+            <li>Join community routes and claim trail progress.</li>
+          </ul>
+          <p class="small text-muted">You can dismiss this permanently or sign up / log in now.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="introLater" data-bs-dismiss="modal">Maybe later</button>
+          <button type="button" class="btn btn-primary" id="introGotIt">Create account / Sign in</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Show intro modal on first visit, then open the account card
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const seen = localStorage.getItem('cycleSavvyIntroShown');
+        if (!seen) {
+          const introEl = document.getElementById('introModal');
+          if (introEl && window.bootstrap && window.bootstrap.Modal) {
+            const introModal = new bootstrap.Modal(introEl, { backdrop: 'static', keyboard: false });
+            introModal.show();
+
+            const openAuthCard = () => {
+              try {
+                localStorage.setItem('cycleSavvyIntroShown', '1');
+                const authCard = document.getElementById('authCard');
+                if (authCard) authCard.style.display = 'block';
+              } catch (e) { console.error(e); }
+            };
+
+            const gotIt = document.getElementById('introGotIt');
+            const closeBtn = document.getElementById('introClose');
+            const laterBtn = document.getElementById('introLater');
+
+            if (gotIt) gotIt.addEventListener('click', () => { introModal.hide(); openAuthCard(); });
+            if (closeBtn) closeBtn.addEventListener('click', () => { introModal.hide(); openAuthCard(); });
+            if (laterBtn) laterBtn.addEventListener('click', () => { introModal.hide(); localStorage.setItem('cycleSavvyIntroShown', '1'); });
+          }
+        }
+      } catch (err) { console.error('Intro modal error', err); }
+    });
+  </script>
   <div class="position-fixed top-50 start-50 translate-middle" id="authCard" style="z-index:3500; display:none; width:320px;">
     <div class="card shadow">
       <div class="card-body">
