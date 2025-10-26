@@ -485,39 +485,61 @@ class CommunityManager {
         resultsBox.classList.remove('bg-dark', 'text-light');
       }
       
+      // Check existing invites and memberships for all users at once
+      const { data: existingInvites } = await this.supabase
+        .from('pending_invitations')
+        .select('invited_user_id, status')
+        .eq('leaderboard_id', this.selectedLeaderboardId);
+
+      const { data: existingMembers } = await this.supabase
+        .from('leaderboard_members')
+        .select('user_id')
+        .eq('leaderboard_id', this.selectedLeaderboardId);
+
       data.forEach(u => {
         const row = document.createElement('div');
         row.className = 'dropdown-item d-flex justify-content-between align-items-center';
         const displayName = u.profile?.username || u.email;
         const email = u.email;
         
+        // Check if user is already invited or is a member
+        const existingInvite = existingInvites?.find(inv => inv.invited_user_id === u.id);
+        const isMember = existingMembers?.some(mem => mem.user_id === u.id);
+        
+        let buttonClass = 'btn-outline-primary';
+        let buttonText = 'Invite';
+        let disabled = false;
+        
+        if (isMember) {
+          buttonClass = 'btn-secondary';
+          buttonText = 'Already Member';
+          disabled = true;
+        } else if (existingInvite?.status === 'pending') {
+          buttonClass = 'btn-success';
+          buttonText = 'Invited';
+          disabled = true;
+        }
+        
         row.innerHTML = `
           <div>
             <div class="fw-bold">${displayName}</div>
             <small class="text-muted">${email}</small>
           </div>
-          <button class="btn btn-sm btn-outline-primary" data-id="${u.id}" data-name="${displayName}">
-            Invite
+          <button class="btn btn-sm ${buttonClass}" data-id="${u.id}" data-name="${displayName}" ${disabled ? 'disabled' : ''}>
+            ${buttonText}
           </button>
         `;
         
         resultsBox.appendChild(row);
         
         const inviteBtn = row.querySelector('button');
-        inviteBtn.addEventListener('click', (e) => {
+          inviteBtn.addEventListener('click', (e) => {
           console.log('Invite button clicked for user:', u.id, displayName);
           e.stopPropagation();
           e.preventDefault();
-          this.inviteUserToLeaderboard(u.id, displayName);
-        });
-        
-        // Also allow clicking on the row to invite
-        row.addEventListener('click', (e) => {
-          if (e.target.tagName !== 'BUTTON') {
-            console.log('Row clicked for user:', u.id, displayName);
-            this.inviteUserToLeaderboard(u.id, displayName);
-          }
-        });
+          this.inviteUserToLeaderboard(u.id, displayName, e.target);
+        });                // Make the row not clickable
+        row.style.cursor = 'default';
       });
     } catch (err) { 
       console.error('Search users failed', err); 
@@ -544,7 +566,11 @@ class CommunityManager {
         .select('user_id')
         .eq('leaderboard_id', this.selectedLeaderboardId)
         .eq('user_id', userId)
-        .single();
+        .single()
+        .headers({
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        });
         
       if (existingMember) {
         return alert(`${userName} is already a member of this leaderboard`);
@@ -586,12 +612,39 @@ class CommunityManager {
       
       // Show success feedback
       const inviteBtn = event.target;
-      inviteBtn.textContent = '✓ Invited!';
+      inviteBtn.textContent = 'Invited';
       inviteBtn.disabled = true;
       inviteBtn.classList.remove('btn-outline-primary');
       inviteBtn.classList.add('btn-success');
       
-      // Show notification
+      // Show notification toast
+      const toast = document.createElement('div');
+      toast.className = 'toast align-items-center text-bg-primary border-0';
+      toast.setAttribute('role', 'alert');
+      toast.setAttribute('aria-live', 'assertive');
+      toast.setAttribute('aria-atomic', 'true');
+      
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="bi bi-check-circle me-2"></i>Invitation sent to ${userName}! They will see it in their profile.
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+      
+      const toastContainer = document.querySelector('.toast-container');
+      if (!toastContainer) {
+        const container = document.createElement('div');
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(container);
+      }
+      
+      document.querySelector('.toast-container').appendChild(toast);
+      const bsToast = new bootstrap.Toast(toast);
+      bsToast.show();
+      
+      // Also show inline notification
       notify(`Invitation sent to ${userName}! They will see it in their profile.`, 'success');
       
       // Clear search and hide dropdown

@@ -273,11 +273,12 @@ class MapManager {
                 this.currentRouteLabel = null;
               }
 
-              const midLatLng = e.target.getLayers().find(layer => 
+              // Get the starting point of the route (where the pin is)
+              const startPoint = e.target.getLayers().find(layer => 
                 layer instanceof L.Polyline
-              )?.getLatLngs()[Math.floor(e.target.getLayers()[0].getLatLngs().length/2)];
+              )?.getLatLngs()[0];
 
-              if (midLatLng) {
+              if (startPoint) {
                 const html = `
                   <div class="route-label card">
                     <div class="card-body p-2 text-center">
@@ -289,10 +290,10 @@ class MapManager {
                 const icon = L.divIcon({ 
                   className: 'route-label-icon', 
                   html, 
-                  iconSize: [200, 70],  // Increased size for better visibility
-                  iconAnchor: [100, -30] // Center horizontally and offset vertically
+                  iconSize: [200, 70],  // Size for the label
+                  iconAnchor: [100, -35] // Center horizontally, place below pin (pin is 32px tall)
                 });
-                this.currentRouteLabel = L.marker(midLatLng, { icon, interactive: false }).addTo(this.map);
+                this.currentRouteLabel = L.marker(startPoint, { icon, interactive: false }).addTo(this.map);
               }
 
               notify("Route loaded: " + routeName + " — " + window.lengthText, "success");
@@ -311,17 +312,31 @@ class MapManager {
           
           // Special case mappings for known routes
           const routeMappings = {
-            'artistpoint': 'Artist Point - Mountain Vista Trail',
+            'artistpoint': 'Artist Point - Alpine Vista Trail',
+            'blackhawkhikingloop': 'Blackhawk - Ridge Hiking Trail',
             'christianityspireloop': 'Christianity Spire - Scenic Loop',
             'coloradoriverloop': 'Colorado River - Scenic Loop Trail',
             'crescentglacierloop': 'Crescent Glacier - Alpine Loop',
+            'devilsgardenloop': 'Devils Garden - Desert Loop Trail',
+            'doughertyvalleyloop': 'Dougherty Valley - Valley View Trail',
+            'doughtyfalls': 'Doughty Falls - Waterfall Trail',
             'gumbolimbo': 'Gumbo Limbo - Nature Trail',
             'ironhorse': 'Iron Horse - Historic Railway Trail',
             'laddercanyon': 'Ladder Canyon - Desert Adventure',
+            'lafayetteloop': 'Lafayette - Rolling Hills Loop',
+            'lastrampascorralcamp': 'Las Trampas - Corral Camp Loop',
+            'livermoreloop': 'Livermore - Valley Vista Trail',
+            'melakwalake': 'Melakwa Lake - Alpine Lake Trail',
             'middleteton': 'Middle Teton - Mountain Ascent',
+            'mountdiabloloop': 'Mount Diablo - Summit Loop Trail',
             'pleasantonridge': 'Pleasanton Ridge - Bay Area Vista',
-            // mapping for newly added file (or renamed versions)
-            'lastrampascorralcamp': 'Las Trampas — Corral Camp Loop'
+            'quandarypeak': 'Quandary Peak - Mountain Summit',
+            'rockcityloop': 'Rock City - Boulder Trail Loop',
+            'sentinelrock': 'Sentinel Rock - Overlook Trail',
+            'tahoerimtrail': 'Tahoe Rim - Scenic Mountain Trail',
+            'tassahararidge': 'Tassajara Ridge - Valley View Loop',
+            'wallpointsummitstaircaseloop': 'Wall Point - Summit Staircase Loop',
+            'washingtoncommonwealthtrail': 'Washington Commonwealth - Historic Trail'
           };
 
           // If we have a special mapping, use it
@@ -407,20 +422,29 @@ class MapManager {
     try {
       const preloadedRoutes = [
         'artistpoint.gpx',
+        'blackhawkhikingloop.gpx',
         'christianityspireloop.gpx',
         'coloradoriverloop.gpx',
         'crescentglacierloop.gpx',
         'devilsgardenloop.gpx',
+        'doughertyvalleyloop.gpx',
         'doughtyfalls.gpx',
         'gumbolimbo.gpx',
         'ironhorse.gpx',
         'laddercanyon.gpx',
+        'lafayetteloop.gpx',
+        'lastrampascorralcamp.gpx',
+        'livermoreloop.gpx',
         'melakwalake.gpx',
         'middleteton.gpx',
+        'mountdiabloloop.gpx',
         'pleasantonridge.gpx',
-        'lastrampascorralcamp.gpx',
         'quandarypeak.gpx',
+        'rockcityloop.gpx',
+        'sentinelrock.gpx',
         'tahoerimtrail.gpx',
+        'tassahararidge.gpx',
+        'wallpointsummitstaircaseloop.gpx',
         'washingtoncommonwealthtrail.gpx'
       ];
       
@@ -646,13 +670,13 @@ class MapManager {
             const meters = totalMeters;
             window.lengthText = formatLengthForSettings(meters); // Store in window for access throughout the load handler
 
-            // Determine midpoint for label placement (use first polyline midpoint)
-            let midLatLng = null;
+            // Get starting point for label placement (same as pin location)
+            let startPoint = null;
             e.target.getLayers && e.target.getLayers().some(layer => {
               if (layer instanceof L.Polyline) {
                 const pts = layer.getLatLngs();
                 if (pts.length) {
-                  midLatLng = pts[Math.floor(pts.length/2)];
+                  startPoint = pts[0]; // Use the first point of the route
                   return true;
                 }
               }
@@ -665,7 +689,7 @@ class MapManager {
               this.currentRouteLabel = null;
             }
 
-            if (midLatLng) {
+            if (startPoint) {
               // Use the globally-set window.lengthText (set above) as a reliable source
               const displayLength = (window.lengthText || '');
               // Use the same card markup used when loading via pin so CSS styles apply
@@ -681,9 +705,9 @@ class MapManager {
                 className: 'route-label-icon', 
                 html, 
                 iconSize: [200, 70],
-                iconAnchor: [100, -30]
+                iconAnchor: [100, -35] // Align with the other label positioning
               });
-              this.currentRouteLabel = L.marker(midLatLng, { icon, interactive: false }).addTo(this.map);
+              this.currentRouteLabel = L.marker(startPoint, { icon, interactive: false }).addTo(this.map);
             }
 
             // Store route geometry for tracing/auto-join

@@ -247,7 +247,7 @@ body.bg-dark .Navbar {
   transition: all var(--transition-medium);
 }
 
-.control-card .card:hover {
+.control-card .card:hover:not(#inviteSection) {
   transform: translateY(-2px);
   box-shadow: var(--panel-shadow), 0 8px 24px rgba(13,110,253,0.12);
 }
@@ -440,11 +440,44 @@ body.bg-dark .form-control::placeholder {
   color: rgba(255,255,255,0.45);
 }
 
+/* Invite section styling */
+#inviteSection {
+  background-color: var(--card-bg);
+  border: 1px solid rgba(0,0,0,0.125);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+body.bg-dark #inviteSection {
+  background-color: #2b2f33;
+  border-color: rgba(255,255,255,0.06);
+}
+
+/* Remove hover effects from invite section items */
+#inviteSection .dropdown-item:hover {
+  background-color: transparent !important;
+  cursor: default !important;
+}
+
+#searchResults .dropdown-item:hover {
+  background-color: transparent !important;
+  cursor: default !important;
+}
+
 /* Profile page: ensure plaintext form controls and list items are visible in dark mode */
 body.bg-dark .form-control-plaintext,
 body.bg-dark #userRoutesList,
 body.bg-dark #invitationsList {
   color: rgba(255,255,255,0.9);
+}
+
+/* Invite section styling */
+#inviteSection {
+  background-color: var(--card-bg);
+}
+
+body.bg-dark #inviteSection {
+  background-color: #2b2f33;
 }
 
 /* Card header in dark mode */
@@ -643,6 +676,29 @@ html, body {
 .leaflet-marker-icon.route-label-icon {
   background: transparent;
   border: 0;
+  pointer-events: none;
+  z-index: 399 !important; /* Below pins but above map */
+}
+
+/* Add a small arrow/triangle pointing up to the pin */
+.route-label.card::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(0,0,0,0.72);
+  z-index: 1;
+}
+
+body:not(.bg-dark) .route-label.card::before {
+  border-bottom-color: rgba(0,0,0,0.68);
+}
+
+body.bg-dark .route-label.card::before {
+  border-bottom-color: rgba(0,0,0,0.78);
 }
 
 /* Slightly different tint if the app is in light mode and user prefers a softer label */
