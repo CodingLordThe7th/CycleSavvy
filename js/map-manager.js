@@ -173,6 +173,17 @@ class MapManager {
     });
   }
 
+  // Create a custom trail marker icon with identical configuration to route pin
+  _createTrailMarkerIcon() {
+    return L.icon({
+      iconUrl: 'images/trail_marker.png',
+      iconSize: [32, 32],        // Width and height
+      iconAnchor: [16, 32],      // Point of the icon which corresponds to marker's location (bottom center)
+      popupAnchor: [0, -32],     // Point from which popups should open relative to iconAnchor
+      className: 'route-pin-icon' // Use same class as route pin for consistent rendering
+    });
+  }
+
   // Add a pin for a route
   async addRoutePin(routeFile) {
     try {
@@ -300,7 +311,6 @@ class MapManager {
           
           // Special case mappings for known routes
           const routeMappings = {
-            'schoolroute': 'School Route - Urban Commute',
             'artistpoint': 'Artist Point - Mountain Vista Trail',
             'christianityspireloop': 'Christianity Spire - Scenic Loop',
             'coloradoriverloop': 'Colorado River - Scenic Loop Trail',
@@ -410,7 +420,6 @@ class MapManager {
         'pleasantonridge.gpx',
         'lastrampascorralcamp.gpx',
         'quandarypeak.gpx',
-        'schoolroute.gpx',
         'tahoerimtrail.gpx',
         'washingtoncommonwealthtrail.gpx'
       ];
@@ -600,10 +609,23 @@ class MapManager {
     try {
       this.currentRouteLayer = new L.GPX(selectedFile, {
         async: true,
-    marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null, wptIconUrl: 'images/trail_marker.png' },
+        marker_options: { 
+          startIconUrl: null, 
+          endIconUrl: null, 
+          shadowUrl: null,
+          wptIcons: false  // Disable default waypoint icons
+        },
+        waypoints: true,  // Still parse waypoints
         polyline_options: { color: "purple", weight: 4 }
       })
         .on("loaded", (e) => {
+          // Add custom markers for waypoints after GPX loads
+          const trailIcon = this._createTrailMarkerIcon();
+          e.target.getLayers().forEach(layer => {
+            if (layer instanceof L.Marker) {
+              layer.setIcon(trailIcon);
+            }
+          });
           this.map.fitBounds(e.target.getBounds());
           const routeName = routeSelect.options[routeSelect.selectedIndex].text || selectedFile;
 

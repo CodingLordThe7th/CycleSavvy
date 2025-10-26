@@ -405,9 +405,25 @@ class CommunityManager {
     this.selectedLeaderboardId = leaderboardId;
     const inviteSection = document.getElementById('inviteSection');
     const infoDiv = document.getElementById('selectedLeaderboardInfo');
-    
-    inviteSection.style.display = 'block';
-    infoDiv.textContent = `Inviting users to: ${leaderboardName}`;
+    const isDarkMode = document.body.classList.contains('bg-dark');
+
+    // Show invite section and apply theme-appropriate background/text
+    if (inviteSection) {
+      inviteSection.style.display = 'block';
+      inviteSection.classList.remove('bg-light', 'bg-dark', 'text-light', 'text-dark');
+      if (isDarkMode) {
+        inviteSection.classList.add('bg-dark', 'text-light');
+      } else {
+        inviteSection.classList.add('bg-light', 'text-dark');
+      }
+    }
+
+    if (infoDiv) {
+      infoDiv.textContent = `Inviting users to: ${leaderboardName}`;
+      infoDiv.classList.remove('text-muted');
+      if (isDarkMode) infoDiv.classList.add('text-light');
+      else infoDiv.classList.add('text-muted');
+    }
     
     // Clear search results
     document.getElementById('searchResults').innerHTML = '';
@@ -459,9 +475,15 @@ class CommunityManager {
         return; 
       }
       
-      // Show dropdown
+      // Show dropdown and apply theme-appropriate styles
       resultsBox.style.display = 'block';
+      const isDarkMode = document.body.classList.contains('bg-dark');
       resultsBox.className = 'dropdown-menu show w-100';
+      if (isDarkMode) {
+        resultsBox.classList.add('bg-dark', 'text-light');
+      } else {
+        resultsBox.classList.remove('bg-dark', 'text-light');
+      }
       
       data.forEach(u => {
         const row = document.createElement('div');

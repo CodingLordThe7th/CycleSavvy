@@ -500,18 +500,21 @@ class ProfileManager {
           throw new Error('Not authenticated');
         }
 
-        const result = await this.supabase
+        // Request returning rows so we can verify the update succeeded.
+        // By default PostgREST may not return rows for UPDATE; appending
+        // .select() makes supabase-js return the updated row(s).
+        const { data, error } = await this.supabase
           .from('user_routes')
           .update({ name: newName })
           .eq('id', routeId)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select();
 
-        console.log('Supabase update result for rename:', result);
-        const { data, error } = result;
+        console.log('Supabase update result for rename:', { data, error });
         if (error) throw error;
 
-        if (!data || data.length === 0) {
-          // No rows updated - maybe ownership/RLS prevented the update
+        // If data is empty it likely means the row wasn't found or RLS blocked it
+        if (!data || (Array.isArray(data) && data.length === 0)) {
           throw new Error('No rows updated (possible permissions issue)');
         }
 
@@ -606,10 +609,10 @@ class ProfileManager {
           <div class="text-truncate me-2">${route.name}</div>
           <div class="btn-group btn-group-sm">
             <button class="btn btn-outline-secondary btn-sm" title="Rename route" data-route-id="${route.id}" data-route-name="${route.name}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-              </svg>
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-outline-danger btn-sm ms-1" title="Delete route" data-delete-route-id="${route.id}" data-delete-route-name="${route.name}">
+              <i class="bi bi-trash"></i>
             </button>
           </div>
         `;
@@ -621,11 +624,82 @@ class ProfileManager {
         if (renameBtn) {
           renameBtn.addEventListener('click', () => this.showRenameModal(route.id, route.name));
         }
+        // Add delete button click handler
+        const deleteBtn = div.querySelector('[data-delete-route-id]');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', () => this.showDeleteModal(route.id, route.name));
+        }
       }
     } catch (err) {
       console.error('Load user routes failed', err);
       userRoutesList.innerHTML = '<div class="text-muted">Error loading routes</div>';
     }
+  }
+
+  showDeleteModal(routeId, routeName) {
+    const modal = document.getElementById('deleteRouteModal');
+    const nameSpan = document.getElementById('deleteRouteName');
+    const routeIdInput = document.getElementById('deleteRouteId');
+    const confirmBtn = document.getElementById('confirmDeleteRouteBtn');
+
+    if (!modal || !nameSpan || !routeIdInput || !confirmBtn) return;
+
+    nameSpan.textContent = routeName || 'this route';
+    routeIdInput.value = routeId;
+
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+
+    // Remove any existing click handlers
+    const oldHandler = confirmBtn.getAttribute('data-delete-handler');
+    if (oldHandler && window[oldHandler]) {
+      confirmBtn.removeEventListener('click', window[oldHandler]);
+      delete window[oldHandler];
+    }
+
+    const deleteHandler = async () => {
+      confirmBtn.disabled = true;
+      try {
+        const user = await window.authManager.getCurrentUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data, error } = await this.supabase
+          .from('user_routes')
+          .delete()
+          .eq('id', routeId)
+          .eq('user_id', user.id)
+          .select();
+
+        console.log('Supabase delete result for route:', { data, error });
+        if (error) throw error;
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          throw new Error('No rows deleted (possible permissions issue)');
+        }
+
+        notify('Route deleted', 'success');
+        await this.loadUserRoutes();
+        bsModal.hide();
+      } catch (err) {
+        console.error('Delete route failed', err);
+        notify('Failed to delete route: ' + (err.message || 'Unknown error'), 'danger');
+      } finally {
+        confirmBtn.disabled = false;
+      }
+    };
+
+    const handlerId = 'deleteHandler_' + Date.now();
+    window[handlerId] = deleteHandler;
+    confirmBtn.setAttribute('data-delete-handler', handlerId);
+    confirmBtn.addEventListener('click', deleteHandler);
+
+    // Clean up when modal is hidden
+    modal.addEventListener('hidden.bs.modal', () => {
+      if (window[handlerId]) {
+        confirmBtn.removeEventListener('click', window[handlerId]);
+        delete window[handlerId];
+      }
+    }, { once: true });
   }
   
   async initializeCumulativeScores() {
